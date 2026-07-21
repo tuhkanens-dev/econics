@@ -1,0 +1,32 @@
+currency:
+  name: "Coins"
+  default-amount: 0
+  # 0.00
+  decimal-pattern: "#.##"
+
+  commands:
+    add:
+      enabled: true
+      permission:
+        value: "econics.coins.add"
+        required: true
+    remove:
+      enabled: true
+      permission:
+        value: "econics.coins.remove"
+        required: true
+    set:
+      enabled: true
+      permission:
+        value: "econics.coins.set"
+        required: true
+    get:
+      enabled: true
+      permission:
+        value: "econics.coins.get"
+        required: true
+    pay:
+      enabled: true
+      permission:
+        value: "econics.coins.pay"
+        required: true

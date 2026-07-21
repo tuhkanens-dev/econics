@@ -1,0 +1,12 @@
+name: econics-core
+version: '1.0.0'
+main: dev.tuhkanens.econicscore.Main
+api-version: '1.21'
+authors: [TuhkanenS]
+
+dependencies:
+  server:
+    PlaceholderAPI:
+      load: BEFORE
+      required: false
+      join-classpath: true

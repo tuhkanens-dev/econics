@@ -1,0 +1,29 @@
+messages:
+  commands:
+    econics:
+      reload: "<green>Econics successfully reloaded."
+    currency:
+      add:
+        sender: "You added <gold><amount></gold> to <gold><target></gold>'s <gold><currency_name></gold> balance."
+        target: "You received <gold><amount></gold> to your <gold><currency_name></gold> balance."
+      remove:
+        sender: "You removed <gold><amount></gold> from <gold><target></gold>'s <gold><currency_name></gold> balance."
+        target: "You lost <gold><amount></gold> from your <gold><currency_name></gold> balance."
+      set:
+        sender: "You set <gold><target></gold>'s <gold><currency_name></gold> balance to <gold><amount></gold>."
+        target: "Your <gold><currency_name></gold> balance was set to <gold><amount></gold>."
+      get:
+        sender: "<gold><target></gold>'s <gold><currency_name></gold> balance: <gold><amount></gold>."
+        target: "Your <gold><currency_name></gold> balance: <gold><amount></gold>."
+      pay:
+        sender: "You transferred <gold><amount></gold> to <gold><target></gold>'s <gold><currency_name></gold> balance."
+        target: "You received <gold><amount></gold> to your <gold><currency_name></gold> balance."
+
+errors:
+  commands:
+    incorrect-number-format: "Incorrect number format"
+    not-enough-arguments: "Not enough arguments"
+    not-enough-currency: "Not enough currency"
+    unknown-currency: "Unknown currency"
+    can-not-self: "You cannot run this command on yourself"
+    only-player: "Only the player can execute this command"
