@@ -1,6 +1,8 @@
 jdk:
   - openjdk21
 
-build:
-  commands:
-    - ./gradlew :econics-api:build
+before_install:
+  - chmod +x gradlew
+
+script:
+  - ./gradlew :econics-api:build
