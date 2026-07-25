@@ -19,14 +19,14 @@ The plugin is written in Kotlin with Gradle. You can import the API library usin
 
 **Gradle (Kotlin DSL)**
 ```kotlin
-compileOnly("dev.tuhkanens.econicsapi:econics-api:1.0.1")
+compileOnly("dev.tuhkanens.econicsapi:econics-api:1.0.2")
 ```
 **Maven (Xml)**
 ```xml
 <dependency>
     <groupId>dev.tuhkanens.econicsapi</groupId>
     <artifactId>econics-api</artifactId>
-    <version>1.0.1</version>
+    <version>1.0.2</version>
     <scope>provided</scope>
 </dependency>
 ```

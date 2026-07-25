@@ -1,5 +1,5 @@
 name: econics-core
-version: '1.0.1'
+version: '1.0.2'
 main: dev.tuhkanens.econicscore.Main
 api-version: '1.21'
 authors: [TuhkanenS]
