@@ -43,6 +43,7 @@ class PlayerImpl : PlayerAPI {
     override fun addPlayer(uuid: UUID, playerName: String): EconicsResult<Nothing> {
         return try {
             val actualUuid = actualUuid(uuid)
+            var overallResult: EconicsResult<Nothing> = EconicsResult.Success
 
             DatabaseManager.transactionBoth { db ->
                 transaction(db.getDatabase()) {
@@ -54,10 +55,12 @@ class PlayerImpl : PlayerAPI {
                         }
                         EconicsResult.Success
                     } else {
-                        EconicsResult.Already
+                        overallResult = EconicsResult.Already
                     }
                 }
             }
+
+            overallResult
         } catch (e: Exception) {
             EconicsResult.Failure(e.message ?: "Unknown error")
         }

@@ -1,6 +1,7 @@
 package dev.tuhkanens.econicscore.listener
 
 import dev.tuhkanens.econicsapi.EconicsAPI
+import dev.tuhkanens.econicsapi.api.CurrencyAPI
 import dev.tuhkanens.econicsapi.api.PlayerAPI
 import dev.tuhkanens.econicsapi.api.PlayerCurrencyAPI
 import dev.tuhkanens.econicsapi.result.EconicsResult
@@ -19,12 +20,13 @@ class PlayerJoinListener : Listener {
     fun onJoin(event: PlayerJoinEvent) {
         val uuid = event.player.uniqueId
         val playerAPI = EconicsAPI.getAPI<PlayerAPI>()
+        val currencyAPI = EconicsAPI.getAPI<PlayerCurrencyAPI>()
 
         when (val result = playerAPI.ensurePlayer(uuid, event.player.name)) {
-            is EconicsResult.Success -> {
+            is EconicsResult.Success, is EconicsResult.Already -> {
                 CurrencyManager.getCurrencies().forEach { (currencyId, data) ->
-                    if (data.defaultAmount > BigDecimal.ZERO) {
-                        EconicsAPI.getAPI<PlayerCurrencyAPI>().setPlayerCurrency(uuid, currencyId, data.defaultAmount)
+                    if (currencyAPI.hasPlayerCurrency(uuid, currencyId) is EconicsResult.NotFound) {
+                        currencyAPI.setPlayerCurrency(uuid, currencyId, data.defaultAmount)
                     }
                 }
             }

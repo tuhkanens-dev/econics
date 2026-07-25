@@ -11,6 +11,7 @@ import dev.tuhkanens.econicscore.Main
 import dev.tuhkanens.econicscore.command.CurrencyCommand
 import dev.tuhkanens.econicscore.database.table.CurrenciesTable
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
@@ -27,20 +28,24 @@ class CurrencyImpl : CurrencyAPI {
     override fun addCurrency(currencyData: CurrencyFileData): EconicsResult<Nothing> {
         return try {
             transaction(api.getDatabase(currencyData.id)) {
-                val exists = existsCurrency(currencyData.id)
-                if (!exists) {
-                    CurrenciesTable.insert {
-                        it[CurrenciesTable.id] = currencyData.id
-                        it[CurrenciesTable.name] = currencyData.name
-                        it[CurrenciesTable.defaultAmount] = currencyData.defaultAmount
-                        it[CurrenciesTable.decimalPattern] = currencyData.decimalPattern
-                    }
-                    addFileCurrency(currencyData)
-                    CurrencyCommand.reload()
-                    EconicsResult.Success
-                } else {
-                    EconicsResult.Already
+                val exists = CurrenciesTable.selectAll()
+                    .where { CurrenciesTable.id eq currencyData.id }
+                    .singleOrNull() != null
+
+                if (exists) {
+                    return@transaction EconicsResult.Already
                 }
+
+                CurrenciesTable.insert {
+                    it[CurrenciesTable.id] = currencyData.id
+                    it[CurrenciesTable.name] = currencyData.name
+                    it[CurrenciesTable.defaultAmount] = currencyData.defaultAmount
+                    it[CurrenciesTable.decimalPattern] = currencyData.decimalPattern
+                }
+
+                addFileCurrency(currencyData)
+                CurrencyCommand.reload()
+                EconicsResult.Success
             }
         } catch (e: Exception) {
             EconicsResult.Failure(e.message ?: "Unknown error")
@@ -67,15 +72,22 @@ class CurrencyImpl : CurrencyAPI {
         currencyNode.node("local-currency").set(currencyData.localCurrency)
 
         val commandsNode = currencyNode.node("commands")
+
         CurrencyCommands.entries.forEach { action ->
             val actionName = action.name.lowercase()
             val commandNode = commandsNode.node(actionName)
 
-            commandNode.node("enabled").set(true)
+            val commandData = currencyData.commands[action]
+
+            commandNode.node("enabled").set(commandData?.enabled ?: true)
 
             val permNode = commandNode.node("permission")
-            permNode.node("value").set("econics.$currencyId.$actionName")
-            permNode.node("required").set(true)
+            permNode.node("value").set(
+                commandData?.permission?.value ?: "econics.$currencyId.$actionName"
+            )
+            permNode.node("required").set(
+                commandData?.permission?.required ?: true
+            )
         }
 
         loader.save(root)
@@ -145,12 +157,6 @@ class CurrencyImpl : CurrencyAPI {
         } catch (e: Exception) {
             EconicsResult.Failure(e.message ?: "Unknown error")
         }
-    }
-
-    private fun existsCurrency(currencyId: String): Boolean {
-        return CurrenciesTable.selectAll()
-            .where { CurrenciesTable.id eq currencyId }
-            .singleOrNull() != null
     }
 
 }

@@ -28,15 +28,15 @@ class PlayerCurrencyImpl : PlayerCurrencyAPI {
     override fun getPlayerCurrencies(uuid: UUID, local: Boolean): EconicsResult<List<PlayerCurrencyData>> {
         return try {
             val actualUuid = actualUuid(uuid)
-
             val db = if (local) DatabaseManager.getLocal() else DatabaseManager.getCurrent()
 
             val currencies = transaction(db.getDatabase()) {
-
                 val playerId = PlayersTable
                     .selectAll()
                     .where { PlayersTable.uuid eq actualUuid }
-                    .single()[PlayersTable.id]
+                    .singleOrNull()
+                    ?.get(PlayersTable.id)
+                    ?: return@transaction emptyList()
 
                 (PlayerCurrenciesTable innerJoin CurrenciesTable)
                     .selectAll()
@@ -56,61 +56,25 @@ class PlayerCurrencyImpl : PlayerCurrencyAPI {
     }
 
     override fun addPlayerCurrency(uuid: UUID, currencyId: String, amount: BigDecimal): EconicsResult<Nothing> {
-        val (result, newAmount) = performCurrencyOperation(uuid, currencyId, amount)
-
-        if (result is EconicsResult.Success && newAmount != null) {
-            Bukkit.getPluginManager().callEvent(PlayerCurrencyChangeEvent(uuid, currencyId, newAmount))
+        return changePlayerCurrency(uuid, currencyId) { current ->
+            (current ?: BigDecimal.ZERO).add(amount)
         }
-        return result
     }
 
     override fun removePlayerCurrency(uuid: UUID, currencyId: String, amount: BigDecimal): EconicsResult<Nothing> {
-        val (result, newAmount) = performCurrencyOperation(uuid, currencyId, amount.negate())
-
-        if (result is EconicsResult.Success && newAmount != null) {
-            Bukkit.getPluginManager().callEvent(PlayerCurrencyChangeEvent(uuid, currencyId, newAmount))
+        return changePlayerCurrency(uuid, currencyId) { current ->
+            (current ?: BigDecimal.ZERO).subtract(amount)
         }
-
-        return result
     }
 
     override fun setPlayerCurrency(uuid: UUID, currencyId: String, amount: BigDecimal): EconicsResult<Nothing> {
-        return try {
-            transaction(api.getDatabase(currencyId)) {
-                val (playerId, currId) = getPlayerAndCurrencyIds(uuid, currencyId)
-                    ?: return@transaction EconicsResult.NotFound
-
-                val current = PlayerCurrenciesTable
-                    .selectAll()
-                    .where { (PlayerCurrenciesTable.player eq playerId) and
-                            (PlayerCurrenciesTable.currency eq currId) }
-                    .singleOrNull()
-
-                if (current == null) {
-                    PlayerCurrenciesTable.insert {
-                        it[player] = playerId
-                        it[currency] = currId
-                        it[PlayerCurrenciesTable.amount] = amount
-                    }
-                } else {
-                    PlayerCurrenciesTable.update({
-                        (PlayerCurrenciesTable.player eq playerId) and (PlayerCurrenciesTable.currency eq currId)
-                    }) {
-                        it[PlayerCurrenciesTable.amount] = amount
-                    }
-                }
-
-                Bukkit.getPluginManager().callEvent(PlayerCurrencyChangeEvent(uuid, currencyId, amount))
-                EconicsResult.Success
-            }
-        } catch (e: Exception) {
-            EconicsResult.Failure(e.message ?: "Unknown error")
-        }
+        return changePlayerCurrency(uuid, currencyId) { amount }
     }
 
     override fun getPlayerCurrency(uuid: UUID, currencyId: String): EconicsResult<BigDecimal> {
         return try {
-            transaction(api.getDatabase(currencyId)) {
+            val db = api.getDatabase(currencyId)
+            transaction(db) {
                 val (playerId, currId) = getPlayerAndCurrencyIds(uuid, currencyId)
                     ?: return@transaction EconicsResult.NotFound
 
@@ -126,12 +90,12 @@ class PlayerCurrencyImpl : PlayerCurrencyAPI {
 
     override fun hasPlayerCurrency(uuid: UUID, currencyId: String): EconicsResult<Nothing> {
         return try {
-            transaction(api.getDatabase(currencyId)) {
+            val db = api.getDatabase(currencyId)
+            transaction(db) {
                 val (playerId, currId) = getPlayerAndCurrencyIds(uuid, currencyId)
                     ?: return@transaction EconicsResult.NotFound
 
                 val exists = getPlayerCurrencyAmount(playerId, currId) != null
-
                 if (exists) EconicsResult.Success else EconicsResult.NotFound
             }
         } catch (e: Exception) {
@@ -139,63 +103,64 @@ class PlayerCurrencyImpl : PlayerCurrencyAPI {
         }
     }
 
-    private fun performCurrencyOperation(uuid: UUID, currencyId: String, delta: BigDecimal, newAmountCalculator: (BigDecimal, BigDecimal) -> BigDecimal = { _, new -> new }): Pair<EconicsResult<Nothing>, BigDecimal?> {
-
-        var calculatedAmount: BigDecimal? = null
-
-        val result = try {
-            transaction(api.getDatabase(currencyId)) {
+    private fun changePlayerCurrency(
+        uuid: UUID,
+        currencyId: String,
+        calculator: (BigDecimal?) -> BigDecimal
+    ): EconicsResult<Nothing> {
+        return try {
+            val db = api.getDatabase(currencyId)
+            transaction(db) {
                 val (playerId, currId) = getPlayerAndCurrencyIds(uuid, currencyId)
                     ?: return@transaction EconicsResult.NotFound
 
-                val current = PlayerCurrenciesTable
-                    .selectAll()
-                    .where { (PlayerCurrenciesTable.player eq playerId) and (PlayerCurrenciesTable.currency eq currId) }
-                    .singleOrNull()
+                val current = getPlayerCurrencyAmount(playerId, currId)
+                val newAmount = calculator(current)
 
                 if (current == null) {
-                    calculatedAmount = delta
                     PlayerCurrenciesTable.insert {
                         it[player] = playerId
                         it[currency] = currId
-                        it[PlayerCurrenciesTable.amount] = delta
+                        it[PlayerCurrenciesTable.amount] = newAmount
                     }
                 } else {
-                    val currentAmount = current[PlayerCurrenciesTable.amount]
-                    calculatedAmount = newAmountCalculator(currentAmount, currentAmount.add(delta))
-
                     PlayerCurrenciesTable.update({
-                        (PlayerCurrenciesTable.player eq playerId) and (PlayerCurrenciesTable.currency eq currId)
+                        (PlayerCurrenciesTable.player eq playerId) and
+                                (PlayerCurrenciesTable.currency eq currId)
                     }) {
-                        it[PlayerCurrenciesTable.amount] = calculatedAmount
+                        it[PlayerCurrenciesTable.amount] = newAmount
                     }
                 }
+
+                Bukkit.getPluginManager().callEvent(
+                    PlayerCurrencyChangeEvent(uuid, currencyId, newAmount)
+                )
+
                 EconicsResult.Success
             }
         } catch (e: Exception) {
             EconicsResult.Failure(e.message ?: "Unknown error")
         }
-
-        return result to calculatedAmount
     }
 
     private fun getPlayerAndCurrencyIds(uuid: UUID, currencyId: String): Pair<EntityID<Int>, String>? {
-        val playerRow = PlayersTable.selectAll()
+        val playerId = PlayersTable.selectAll()
             .where { PlayersTable.uuid eq actualUuid(uuid) }
-            .singleOrNull() ?: return null
+            .singleOrNull()?.get(PlayersTable.id) ?: return null
 
-        val currencyRow = CurrenciesTable.selectAll()
+        val dbCurrencyId = CurrenciesTable.selectAll()
             .where { CurrenciesTable.id eq currencyId }
-            .singleOrNull() ?: return null
+            .singleOrNull()?.get(CurrenciesTable.id) ?: return null
 
-        return playerRow[PlayersTable.id] to currencyRow[CurrenciesTable.id]
+        return playerId to dbCurrencyId
     }
 
     private fun getPlayerCurrencyAmount(playerId: EntityID<Int>, currencyId: String): BigDecimal? {
         return PlayerCurrenciesTable.selectAll()
             .where { (PlayerCurrenciesTable.player eq playerId) and
-                    (PlayerCurrenciesTable.currency eq currencyId) }
-            .singleOrNull()?.get(PlayerCurrenciesTable.amount)
+                     (PlayerCurrenciesTable.currency eq currencyId) }
+            .singleOrNull()
+            ?.get(PlayerCurrenciesTable.amount)
     }
 
     private fun actualUuid(uuid: UUID): String = uuid.toString()

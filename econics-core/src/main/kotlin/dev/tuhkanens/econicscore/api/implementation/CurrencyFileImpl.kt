@@ -48,7 +48,8 @@ class CurrencyFileImpl : CurrencyFileAPI {
     }
 
     override fun getFormatDecimalPattern(currencyId: String, amount: BigDecimal): String? {
-        return DecimalFormat(getCurrency(currencyId)?.decimalPattern).format(amount)
+        val pattern = getCurrency(currencyId)?.decimalPattern ?: return null
+        return DecimalFormat(pattern).format(amount)
     }
 
 }
