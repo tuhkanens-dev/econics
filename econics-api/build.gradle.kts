@@ -8,6 +8,9 @@ version = "1.0.1"
 
 repositories {
     mavenCentral()
+    maven("https://repo.papermc.io/repository/maven-public/") {
+        name = "papermc-repo"
+    }
 }
 
 dependencies {
