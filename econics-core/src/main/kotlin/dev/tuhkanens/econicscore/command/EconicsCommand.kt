@@ -4,7 +4,6 @@ import com.mojang.brigadier.exceptions.BuiltInExceptions
 import com.mojang.brigadier.exceptions.CommandSyntaxException
 import dev.jorel.commandapi.exceptions.WrapperCommandSyntaxException
 import dev.jorel.commandapi.executors.CommandExecutor
-import dev.jorel.commandapi.kotlindsl.commandAPICommand
 import dev.jorel.commandapi.kotlindsl.commandTree
 import dev.jorel.commandapi.kotlindsl.literalArgument
 import dev.tuhkanens.econicscore.manager.ConfigManager

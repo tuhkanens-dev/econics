@@ -4,6 +4,9 @@ currency:
   # 0.00
   decimal-pattern: "#.##"
 
+  # sqlite
+  local-currency: true
+
   commands:
     add:
       enabled: true

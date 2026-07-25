@@ -9,18 +9,18 @@ class Main : JavaPlugin() {
     private lateinit var bootstrap: Bootstrap
 
     companion object {
-        lateinit var instance: Main
+        lateinit var plugin: Main
             private set
     }
 
     val miniMessage: MiniMessage = MiniMessage.miniMessage()
 
     override fun onLoad() {
-        instance = this
+        plugin = this
 
         LibraryLoader().loadLibraries()
 
-        bootstrap = Bootstrap(instance)
+        bootstrap = Bootstrap(plugin)
         bootstrap.load()
     }
 

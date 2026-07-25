@@ -2,10 +2,6 @@ package dev.tuhkanens.econicscore
 
 import dev.jorel.commandapi.CommandAPI
 import dev.jorel.commandapi.CommandAPIPaperConfig
-import dev.tuhkanens.econicsapi.EconicsAPI
-import dev.tuhkanens.econicsapi.api.CurrencyAPI
-import dev.tuhkanens.econicsapi.data.CurrencyAction
-import dev.tuhkanens.econicsapi.data.CurrencyFileData
 import dev.tuhkanens.econicscore.api.APIs
 import dev.tuhkanens.econicscore.command.CurrencyCommand
 import dev.tuhkanens.econicscore.command.EconicsCommand
@@ -15,7 +11,6 @@ import dev.tuhkanens.econicscore.manager.CurrencyManager
 import dev.tuhkanens.econicscore.manager.DatabaseManager
 import dev.tuhkanens.econicscore.manager.MessagesManager
 import dev.tuhkanens.econicscore.placeholder.EconicsPlaceholderExpansion
-import java.math.BigDecimal
 
 class Bootstrap(private val plugin: Main) {
 
@@ -58,7 +53,7 @@ class Bootstrap(private val plugin: Main) {
     private fun registerPlaceholders() {
         if (plugin.server.pluginManager.getPlugin("PlaceholderAPI") != null) {
             try {
-                EconicsPlaceholderExpansion(plugin).register()
+                EconicsPlaceholderExpansion().register()
                 plugin.logger.info("PlaceholderAPI placeholders registered")
             } catch (e: Exception) {
                 plugin.logger.warning("Failed to register PlaceholderAPI placeholders: ${e.message}")

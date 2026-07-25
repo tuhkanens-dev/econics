@@ -2,7 +2,7 @@ package dev.tuhkanens.econicscore.manager
 
 import dev.tuhkanens.econicsapi.EconicsAPI
 import dev.tuhkanens.econicsapi.api.CurrencyAPI
-import dev.tuhkanens.econicsapi.data.CurrencyAction
+import dev.tuhkanens.econicsapi.data.CurrencyCommands
 import dev.tuhkanens.econicsapi.data.CurrencyFileData
 import dev.tuhkanens.econicscore.Main
 import dev.tuhkanens.econicscore.command.CurrencyCommand
@@ -14,7 +14,7 @@ import java.util.concurrent.ConcurrentHashMap
 
 object CurrencyManager {
 
-    private val instance: Main = Main.instance
+    private val plugin = Main.plugin
 
     private val files: ConcurrentHashMap<String, File> = ConcurrentHashMap()
     private val currencies: ConcurrentHashMap<String, CurrencyFileData> = ConcurrentHashMap()
@@ -28,7 +28,7 @@ object CurrencyManager {
         currencies.clear()
         files.clear()
 
-        val currenciesFolder = File(instance.dataFolder, "currencies")
+        val currenciesFolder = File(plugin.dataFolder, "currencies")
         if (!currenciesFolder.exists()) {
             currenciesFolder.mkdirs()
         }
@@ -75,7 +75,7 @@ object CurrencyManager {
                 }
             }
         } catch (e: Exception) {
-            instance.logger.severe("Could not copy default currencies from JAR: ${e.message}")
+            plugin.logger.severe("Could not copy default currencies from JAR: ${e.message}")
             e.printStackTrace()
         }
     }
@@ -85,7 +85,7 @@ object CurrencyManager {
             ?: emptyArray()
 
         if (ymlFiles.isEmpty()) {
-            instance.logger.warning("No .yml files found in currencies/ folder!")
+            plugin.logger.warning("No .yml files found in currencies/ folder!")
             return
         }
 
@@ -105,14 +105,14 @@ object CurrencyManager {
         val currencyNode = root.node("currency")
 
         val currencyName = currencyNode.node("name").string ?: run {
-            instance.logger.severe("Currency name is not specified in ${file.name}")
+            plugin.logger.severe("Currency name is not specified in ${file.name}")
             return
         }
 
-        val commands = mutableMapOf<CurrencyAction, CurrencyFileData.CommandData>()
+        val commands = mutableMapOf<CurrencyCommands, CurrencyFileData.CommandData>()
         val commandsNode = currencyNode.node("commands")
 
-        for (action in CurrencyAction.entries) {
+        for (action in CurrencyCommands.entries) {
             val key = action.name.lowercase()
             val actionNode = commandsNode.node(key)
 
@@ -130,24 +130,27 @@ object CurrencyManager {
 
         val defaultAmountStr = currencyNode.node("default-amount").string
         val defaultAmount: BigDecimal = if (defaultAmountStr.isNullOrBlank()) {
-            instance.logger.warning("'default-amount' not specified in ${file.name}, using 0")
+            plugin.logger.warning("'default-amount' not specified in ${file.name}, using 0")
             BigDecimal.ZERO
         } else {
             try {
                 BigDecimal(defaultAmountStr)
             } catch (_: NumberFormatException) {
-                instance.logger.severe("'default-amount' has invalid numeric value '$defaultAmountStr' in ${file.name}")
+                plugin.logger.severe("'default-amount' has invalid numeric value '$defaultAmountStr' in ${file.name}")
                 return
             }
         }
 
         val decimalPattern = currencyNode.node("decimal-pattern").string ?: "#.##"
 
+        val localCurrency = currencyNode.node("local-currency").getBoolean(false)
+
         val currencyFileData = CurrencyFileData(
             id = currencyId,
             name = currencyName,
             defaultAmount = defaultAmount,
             decimalPattern = decimalPattern,
+            localCurrency = localCurrency,
             commands = commands
         )
 

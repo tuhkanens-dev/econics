@@ -10,14 +10,13 @@ import me.clip.placeholderapi.expansion.PlaceholderExpansion
 import org.bukkit.OfflinePlayer
 import java.util.*
 
-class EconicsPlaceholderExpansion(private val plugin: Main) : PlaceholderExpansion() {
+class EconicsPlaceholderExpansion : PlaceholderExpansion() {
+
+    private val plugin = Main.plugin
 
     override fun getIdentifier(): String = "econics"
-
     override fun getAuthor(): String = "TuhkanenS"
-
     override fun getVersion(): String = plugin.pluginMeta.version
-
     override fun persist(): Boolean = true
 
     override fun onRequest(player: OfflinePlayer?, params: String): String? {
@@ -26,31 +25,43 @@ class EconicsPlaceholderExpansion(private val plugin: Main) : PlaceholderExpansi
         val parts = params.split("_")
 
         return when (parts.size) {
-            1 -> {
-                val currencyId = parts[0].lowercase()
-                getFormattedBalance(player.uniqueId, currencyId)
+            1 -> { // %econics_<currency>%
+                getBalance(player.uniqueId, parts[0], useFormat = false)
             }
-            2 -> {
-                val targetPlayerName = parts[0]
-                val currencyId = parts[1].lowercase()
+            2 -> when (parts[1]) {
+                "format" -> { // %econics_<currency>_format%
+                    getBalance(player.uniqueId, parts[0], useFormat = true)
+                }
+                else -> { // %econics_<player>_<currency>%
+                    val target = plugin.server.getOfflinePlayer(parts[0])
+                    getBalance(target.uniqueId, parts[1], useFormat = false)
+                }
+            }
+            3 -> { // %econics_<player>_<currency>_format%
+                if (parts[2] == "format") {
+                    val target = plugin.server.getOfflinePlayer(parts[0])
+                    getBalance(target.uniqueId, parts[1], useFormat = true)
+                } else {
+                    null
+                }
+            }
 
-                val targetPlayer = plugin.server.getOfflinePlayer(targetPlayerName)
-                getFormattedBalance(targetPlayer.uniqueId, currencyId)
-            }
             else -> null
         }
     }
 
-    private fun getFormattedBalance(uuid: UUID, currencyId: String): String? {
-        val currencyData = CurrencyManager.getCurrencies()[currencyId] ?: return null
-        val api = EconicsAPI.getAPI<PlayerCurrencyAPI>()
+    private fun getBalance(uuid: UUID, currencyId: String, useFormat: Boolean): String? {
+        val currencyData = EconicsAPI.getAPI<CurrencyFileAPI>().getCurrency(currencyId) ?: return null
 
-        return when (val result = api.getPlayerCurrency(uuid, currencyId)) {
-            is EconicsResult.GetSuccess -> EconicsAPI.getAPI<CurrencyFileAPI>().getFormatDecimalPattern(currencyId, result.data)
-            is EconicsResult.Failure,
-            is EconicsResult.Already,
-            is EconicsResult.NotFound,
-            is EconicsResult.Success -> EconicsAPI.getAPI<CurrencyFileAPI>().getFormatDecimalPattern(currencyId, currencyData.defaultAmount)
+        val amount = when (val result = EconicsAPI.getAPI<PlayerCurrencyAPI>().getPlayerCurrency(uuid, currencyId)) {
+            is EconicsResult.GetSuccess -> result.data
+            else -> currencyData.defaultAmount
+        }
+
+        return if (useFormat) {
+            EconicsAPI.getAPI<CurrencyFileAPI>().getFormatDecimalPattern(currencyId, amount)
+        } else {
+            amount.toPlainString()
         }
     }
 }

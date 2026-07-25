@@ -1,16 +1,19 @@
 package dev.tuhkanens.econicscore.api.implementation
 
+import dev.tuhkanens.econicsapi.EconicsAPI
+import dev.tuhkanens.econicsapi.api.CurrencyFileAPI
 import dev.tuhkanens.econicsapi.api.PlayerCurrencyAPI
 import dev.tuhkanens.econicsapi.data.PlayerCurrencyData
+import dev.tuhkanens.econicsapi.event.PlayerCurrencyChangeEvent
 import dev.tuhkanens.econicsapi.result.EconicsResult
 import dev.tuhkanens.econicscore.database.table.CurrenciesTable
 import dev.tuhkanens.econicscore.database.table.PlayerCurrenciesTable
 import dev.tuhkanens.econicscore.database.table.PlayersTable
 import dev.tuhkanens.econicscore.manager.DatabaseManager
+import org.bukkit.Bukkit
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.eq
-import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
@@ -20,13 +23,15 @@ import java.util.UUID
 
 class PlayerCurrencyImpl : PlayerCurrencyAPI {
 
-    private val db: Database = DatabaseManager.getCurrentDatabase().getDatabase()
+    private val api = EconicsAPI.getAPI<CurrencyFileAPI>()
 
-    override fun getPlayerCurrencies(uuid: UUID): EconicsResult<List<PlayerCurrencyData>> {
+    override fun getPlayerCurrencies(uuid: UUID, local: Boolean): EconicsResult<List<PlayerCurrencyData>> {
         return try {
             val actualUuid = actualUuid(uuid)
 
-            val currencies = transaction(db) {
+            val db = if (local) DatabaseManager.getLocal() else DatabaseManager.getCurrent()
+
+            val currencies = transaction(db.getDatabase()) {
 
                 val playerId = PlayersTable
                     .selectAll()
@@ -52,19 +57,21 @@ class PlayerCurrencyImpl : PlayerCurrencyAPI {
 
     override fun addPlayerCurrency(uuid: UUID, currencyId: String, amount: BigDecimal): EconicsResult<Nothing> {
         return performCurrencyOperation(uuid, currencyId, amount) { _, newAmount ->
+            Bukkit.getPluginManager().callEvent(PlayerCurrencyChangeEvent(uuid, currencyId, amount))
             newAmount
         }
     }
 
     override fun removePlayerCurrency(uuid: UUID, currencyId: String, amount: BigDecimal): EconicsResult<Nothing> {
         return performCurrencyOperation(uuid, currencyId, amount.negate()) { _, newAmount ->
+            Bukkit.getPluginManager().callEvent(PlayerCurrencyChangeEvent(uuid, currencyId, amount))
             newAmount
         }
     }
 
     override fun setPlayerCurrency(uuid: UUID, currencyId: String, amount: BigDecimal): EconicsResult<Nothing> {
         return try {
-            transaction(db) {
+            transaction(api.getDatabase(currencyId)) {
                 val (playerId, currId) = getPlayerAndCurrencyIds(uuid, currencyId)
                     ?: return@transaction EconicsResult.NotFound
 
@@ -88,6 +95,7 @@ class PlayerCurrencyImpl : PlayerCurrencyAPI {
                     }
                 }
 
+                Bukkit.getPluginManager().callEvent(PlayerCurrencyChangeEvent(uuid, currencyId, amount))
                 EconicsResult.Success
             }
         } catch (e: Exception) {
@@ -97,7 +105,7 @@ class PlayerCurrencyImpl : PlayerCurrencyAPI {
 
     override fun getPlayerCurrency(uuid: UUID, currencyId: String): EconicsResult<BigDecimal> {
         return try {
-            transaction(db) {
+            transaction(api.getDatabase(currencyId)) {
                 val (playerId, currId) = getPlayerAndCurrencyIds(uuid, currencyId)
                     ?: return@transaction EconicsResult.NotFound
 
@@ -113,7 +121,7 @@ class PlayerCurrencyImpl : PlayerCurrencyAPI {
 
     override fun hasPlayerCurrency(uuid: UUID, currencyId: String): EconicsResult<Nothing> {
         return try {
-            transaction(db) {
+            transaction(api.getDatabase(currencyId)) {
                 val (playerId, currId) = getPlayerAndCurrencyIds(uuid, currencyId)
                     ?: return@transaction EconicsResult.NotFound
 
@@ -128,7 +136,7 @@ class PlayerCurrencyImpl : PlayerCurrencyAPI {
 
     private fun performCurrencyOperation(uuid: UUID, currencyId: String, delta: BigDecimal, newAmountCalculator: (BigDecimal, BigDecimal) -> BigDecimal = { _, new -> new }): EconicsResult<Nothing> {
         return try {
-            transaction(db) {
+            transaction(api.getDatabase(currencyId)) {
                 val (playerId, currId) = getPlayerAndCurrencyIds(uuid, currencyId)
                     ?: return@transaction EconicsResult.NotFound
 

@@ -10,28 +10,25 @@ import java.io.File
 
 object MessagesManager {
 
-    private val instance: Main = Main.instance
-    private val miniMessage: MiniMessage = instance.miniMessage
+    private val plugin = Main.plugin
+    private val miniMessage: MiniMessage = plugin.miniMessage
 
     private lateinit var root: ConfigurationNode
     private lateinit var yaml: YamlConfigurationLoader
     private lateinit var file: File
 
-    private const val FILE = "messages.yml"
+    private const val FILE_NAME = "messages.yml"
 
     fun init() {
 
-        file = File("${instance.dataFolder}/$FILE")
+        file = File("${plugin.dataFolder}/$FILE_NAME")
 
         if (!file.exists()) {
-            instance.javaClass.getResourceAsStream("/$FILE")?.use { input ->
-                file.outputStream().use { output ->
-                    input.copyTo(output)
-                }
-            }
+            file.parentFile.mkdirs()
+            plugin.saveResource(FILE_NAME, false)
         }
 
-        loadYaml()
+        load()
 
     }
 
@@ -69,9 +66,9 @@ object MessagesManager {
 
     fun get() = root
 
-    fun reload() = loadYaml()
+    fun reload() = load()
 
-    fun loadYaml() {
+    fun load() {
         yaml = YamlConfigurationLoader.builder()
             .path(file.toPath())
             .build()

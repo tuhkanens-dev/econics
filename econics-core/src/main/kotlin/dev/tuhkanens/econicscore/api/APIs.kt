@@ -13,10 +13,10 @@ import dev.tuhkanens.econicscore.api.implementation.PlayerImpl
 class APIs {
 
     fun register() {
+        EconicsAPI.register(CurrencyFileAPI::class.java, CurrencyFileImpl())
         EconicsAPI.register(CurrencyAPI::class.java, CurrencyImpl())
         EconicsAPI.register(PlayerAPI::class.java, PlayerImpl())
         EconicsAPI.register(PlayerCurrencyAPI::class.java, PlayerCurrencyImpl())
-        EconicsAPI.register(CurrencyFileAPI::class.java, CurrencyFileImpl())
     }
 
 }

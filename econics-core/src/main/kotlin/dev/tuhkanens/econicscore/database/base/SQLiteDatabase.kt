@@ -7,12 +7,12 @@ import java.io.File
 
 object SQLiteDatabase : EconicsDatabase() {
 
-    private val instance = Main.instance
+    private val plugin = Main.plugin
     private lateinit var database: Database
 
     override fun createConnection(): Database {
 
-        val dbFile = File("${instance.dataFolder}/econics.db")
+        val dbFile = File("${plugin.dataFolder}/econics.db")
         if (!dbFile.parentFile.exists()) dbFile.parentFile.mkdirs()
 
         database = Database.connect(

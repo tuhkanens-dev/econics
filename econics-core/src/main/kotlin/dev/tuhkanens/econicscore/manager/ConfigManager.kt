@@ -7,40 +7,41 @@ import java.io.File
 
 object ConfigManager {
 
-    private val instance: Main = Main.instance
+    private val plugin = Main.plugin
 
     private lateinit var root: ConfigurationNode
     private lateinit var yaml: YamlConfigurationLoader
     private lateinit var file: File
 
-    private const val FILE = "config.yml"
+    private const val FILE_NAME = "config.yml"
 
     fun init() {
-
-        file = File("${instance.dataFolder}/$FILE")
+        file = File("${plugin.dataFolder}/$FILE_NAME")
 
         if (!file.exists()) {
             file.parentFile.mkdirs()
-            instance.javaClass.getResourceAsStream("/$FILE")?.use { input ->
-                file.outputStream().use { output ->
-                    input.copyTo(output)
-                }
-            }
+            plugin.saveResource(FILE_NAME, false)
         }
 
-        this.loadYaml()
-
+        load()
     }
 
     fun get() = root
+    fun reload() = load()
 
-    fun reload() = loadYaml()
-
-    private fun loadYaml() {
+    private fun load() {
         yaml = YamlConfigurationLoader.builder()
             .path(file.toPath())
             .build()
         root = yaml.load()
     }
+
+//    private fun save() {
+//        try {
+//            yaml.save(root)
+//        } catch (e: Exception) {
+//            e.printStackTrace()
+//        }
+//    }
 
 }

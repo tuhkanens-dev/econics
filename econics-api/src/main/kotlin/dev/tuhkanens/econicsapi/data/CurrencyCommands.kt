@@ -1,6 +1,6 @@
 package dev.tuhkanens.econicsapi.data
 
-enum class CurrencyAction {
+enum class CurrencyCommands {
     ADD,
     REMOVE,
     SET,

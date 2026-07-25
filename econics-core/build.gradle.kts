@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "dev.tuhkanens"
-version = "1.0.0"
+version = "1.0.1"
 
 repositories {
     mavenCentral()
@@ -54,6 +54,7 @@ tasks {
         relocate("org.sqlite", "dev.tuhkanens.econics.libs.sqlite")
         relocate("dev.jorel.commandapi", "dev.tuhkanens.econics.libs.commandapi")
         relocate("org.spongepowered.configurate", "dev.tuhkanens.econics.libs.configurate")
+        relocate("com.zaxxer.hikari", "dev.tuhkanens.econics.libs.hikari")
     }
     build {
         dependsOn("shadowJar")

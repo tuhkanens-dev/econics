@@ -12,7 +12,7 @@ import dev.jorel.commandapi.exceptions.WrapperCommandSyntaxException
 import dev.tuhkanens.econicsapi.EconicsAPI
 import dev.tuhkanens.econicsapi.api.CurrencyFileAPI
 import dev.tuhkanens.econicsapi.api.PlayerCurrencyAPI
-import dev.tuhkanens.econicsapi.data.CurrencyAction
+import dev.tuhkanens.econicsapi.data.CurrencyCommands
 import dev.tuhkanens.econicsapi.result.EconicsResult
 import dev.tuhkanens.econicscore.manager.CurrencyManager
 import dev.tuhkanens.econicscore.manager.MessagesManager
@@ -40,7 +40,7 @@ object CurrencyCommand {
 
         val currency = CurrencyManager.getCurrencies()[currencyId] ?: return
 
-        val actionSubcommands = CurrencyAction.entries
+        val actionSubcommands = CurrencyCommands.entries
             .filter { action ->
                 val command = EconicsAPI.getAPI<CurrencyFileAPI>().getCommand(currency.id, action)
                 command?.enabled != false
@@ -74,7 +74,7 @@ object CurrencyCommand {
         register()
     }
 
-    private fun buildActionCommand(currencyId: String, action: CurrencyAction): CommandAPICommand {
+    private fun buildActionCommand(currencyId: String, action: CurrencyCommands): CommandAPICommand {
         return CommandAPICommand(action.name.lowercase()).apply {
             val permission = EconicsAPI.getAPI<CurrencyFileAPI>().getPermission(currencyId, action)
 
@@ -84,14 +84,14 @@ object CurrencyCommand {
 
             val arguments = mutableListOf<Argument<*>>()
             arguments.add(EntitySelectorArgument.OnePlayer("player"))
-            if (action != CurrencyAction.GET) {
+            if (action != CurrencyCommands.GET) {
                 arguments.add(StringArgument("value"))
             }
             withArguments(arguments)
 
             executes(CommandExecutor { sender, args ->
                 val player = args[0] as OfflinePlayer
-                val amount = if (action != CurrencyAction.GET) {
+                val amount = if (action != CurrencyCommands.GET) {
                     try {
                         BigDecimal(args[1] as String)
                     } catch (_: Exception) {
@@ -108,7 +108,7 @@ object CurrencyCommand {
         sender: CommandSender,
         player: OfflinePlayer,
         currencyId: String,
-        action: CurrencyAction,
+        action: CurrencyCommands,
         amount: BigDecimal
     ) {
         val currencyName = EconicsAPI.getAPI<CurrencyFileAPI>().getName(currencyId)
@@ -117,25 +117,25 @@ object CurrencyCommand {
         val api = EconicsAPI.getAPI<PlayerCurrencyAPI>()
 
         val actualAmount: BigDecimal = when (action) {
-            CurrencyAction.ADD -> {
+            CurrencyCommands.ADD -> {
                 api.addPlayerCurrency(player.uniqueId, currencyId, amount)
                 amount
             }
-            CurrencyAction.REMOVE -> {
+            CurrencyCommands.REMOVE -> {
                 api.removePlayerCurrency(player.uniqueId, currencyId, amount)
                 amount
             }
-            CurrencyAction.SET -> {
+            CurrencyCommands.SET -> {
                 api.setPlayerCurrency(player.uniqueId, currencyId, amount)
                 amount
             }
-            CurrencyAction.GET -> {
+            CurrencyCommands.GET -> {
                 when (val result = api.getPlayerCurrency(player.uniqueId, currencyId)) {
                     is EconicsResult.GetSuccess -> result.data
                     else -> BigDecimal.ZERO
                 }
             }
-            CurrencyAction.PAY -> {
+            CurrencyCommands.PAY -> {
                 if (sender !is Player) throw throwMessage("errors.commands.only-player")
                 if (sender == player) throw throwMessage("errors.commands.can-not-self")
 
@@ -155,7 +155,7 @@ object CurrencyCommand {
         val resolver = TagResolver.resolver(
             Placeholder.parsed("target", player.name ?: "Unknown"),
             Placeholder.parsed("sender", sender.name),
-            Placeholder.parsed("amount", EconicsAPI.getAPI<CurrencyFileAPI>().getFormatDecimalPattern(currencyId, actualAmount)),
+            Placeholder.parsed("amount", EconicsAPI.getAPI<CurrencyFileAPI>().getFormatDecimalPattern(currencyId, actualAmount) ?: actualAmount.toPlainString()),
             Placeholder.parsed("currency_name", currencyName)
         )
 

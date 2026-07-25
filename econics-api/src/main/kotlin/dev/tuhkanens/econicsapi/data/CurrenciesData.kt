@@ -7,7 +7,8 @@ data class CurrencyFileData(
     val name: String,
     val defaultAmount: BigDecimal,
     val decimalPattern: String,
-    val commands: Map<CurrencyAction, CommandData>
+    val localCurrency: Boolean = false,
+    val commands: Map<CurrencyCommands, CommandData>
 ) {
     data class CommandData(
         val enabled: Boolean = true,

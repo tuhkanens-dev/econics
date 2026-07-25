@@ -7,9 +7,9 @@ import dev.tuhkanens.econicscore.Main
 
 class LibraryLoader {
 
-    private val instance = Main.instance
+    private val plugin = Main.plugin
 
-    private val libraryManager: LibraryManager = PaperLibraryManager(instance)
+    private val libraryManager: LibraryManager = PaperLibraryManager(plugin)
 
     fun loadLibraries() {
         libraryManager.addMavenCentral()
