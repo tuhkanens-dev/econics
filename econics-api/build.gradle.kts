@@ -3,7 +3,7 @@ plugins {
     `maven-publish`
 }
 
-group = "dev.tuhkanens.econicsapi"
+group = "dev.tuhkanens.econics"
 version = "1.0.1"
 
 repositories {

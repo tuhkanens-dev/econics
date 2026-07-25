@@ -4,7 +4,7 @@ plugins {
     id("com.gradleup.shadow") version "8.3.0"
 }
 
-group = "dev.tuhkanens"
+group = "dev.tuhkanens.econics"
 version = "1.0.1"
 
 repositories {
