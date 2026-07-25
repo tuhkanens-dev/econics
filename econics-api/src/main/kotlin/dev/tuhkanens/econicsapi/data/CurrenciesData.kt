@@ -19,4 +19,8 @@ data class CurrencyFileData(
         val value: String,
         val required: Boolean = true
     )
+
+    fun permissionData(currencyId: String, command: CurrencyCommands): PermissionData {
+        return PermissionData("econics.$currencyId.${command.name.lowercase()}", true)
+    }
 }
