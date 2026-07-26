@@ -31,7 +31,9 @@ object CurrencyCommand {
 
     fun register() {
         CurrencyManager.getCurrencies().values.forEach { currency ->
-            registerCurrency(currency.id)
+            if (currency.commands.enabled) {
+                registerCurrency(currency.id)
+            }
         }
     }
 
@@ -41,11 +43,11 @@ object CurrencyCommand {
         val currency = CurrencyManager.getCurrencies()[currencyId] ?: return
 
         val actionSubcommands = CurrencyCommands.entries
-            .filter { action ->
-                val command = EconicsAPI.getAPI<CurrencyFileAPI>().getCommand(currency.id, action)
+            .filter { command ->
+                val command = EconicsAPI.getAPI<CurrencyFileAPI>().getCommand(currency.id, command)
                 command?.enabled != false
             }
-            .map { action -> buildActionCommand(currency.id, action) }
+            .map { command -> buildActionCommand(currency.id, command) }
             .toTypedArray()
 
         CommandAPICommand(currency.id)
@@ -74,9 +76,9 @@ object CurrencyCommand {
         register()
     }
 
-    private fun buildActionCommand(currencyId: String, action: CurrencyCommands): CommandAPICommand {
-        return CommandAPICommand(action.name.lowercase()).apply {
-            val permission = EconicsAPI.getAPI<CurrencyFileAPI>().getPermission(currencyId, action)
+    private fun buildActionCommand(currencyId: String, command: CurrencyCommands): CommandAPICommand {
+        return CommandAPICommand(command.name.lowercase()).apply {
+            val permission = EconicsAPI.getAPI<CurrencyFileAPI>().getPermission(currencyId, command)
 
             if (permission?.required == true && permission.value.isNotBlank()) {
                 withPermission(permission.value)
@@ -84,14 +86,14 @@ object CurrencyCommand {
 
             val arguments = mutableListOf<Argument<*>>()
             arguments.add(EntitySelectorArgument.OnePlayer("player"))
-            if (action != CurrencyCommands.GET) {
+            if (command != CurrencyCommands.GET) {
                 arguments.add(StringArgument("value"))
             }
             withArguments(arguments)
 
             executes(CommandExecutor { sender, args ->
                 val player = args[0] as OfflinePlayer
-                val amount = if (action != CurrencyCommands.GET) {
+                val amount = if (command != CurrencyCommands.GET) {
                     try {
                         BigDecimal(args[1] as String)
                     } catch (_: Exception) {
@@ -99,7 +101,7 @@ object CurrencyCommand {
                     }
                 } else BigDecimal.ZERO
 
-                execute(sender, player, currencyId, action, amount)
+                execute(sender, player, currencyId, command, amount)
             })
         }
     }
@@ -108,7 +110,7 @@ object CurrencyCommand {
         sender: CommandSender,
         player: OfflinePlayer,
         currencyId: String,
-        action: CurrencyCommands,
+        command: CurrencyCommands,
         amount: BigDecimal
     ) {
         val currencyName = EconicsAPI.getAPI<CurrencyFileAPI>().getName(currencyId)
@@ -116,7 +118,7 @@ object CurrencyCommand {
 
         val api = EconicsAPI.getAPI<PlayerCurrencyAPI>()
 
-        val actualAmount: BigDecimal = when (action) {
+        val actualAmount: BigDecimal = when (command) {
             CurrencyCommands.ADD -> {
                 api.addPlayerCurrency(player.uniqueId, currencyId, amount)
                 amount
@@ -159,11 +161,11 @@ object CurrencyCommand {
             Placeholder.parsed("currency_name", currencyName)
         )
 
-        val actionName = action.name.lowercase()
+        val commandName = command.name.lowercase()
 
         sender.sendMessage(
             MessagesManager.getComponent(
-                "messages.commands.currency.$actionName.sender",
+                "messages.commands.currency.$commandName.sender",
                 resolver
             )
         )
@@ -171,7 +173,7 @@ object CurrencyCommand {
         if (sender != player) {
             (player as? Player)?.takeIf { it.isOnline }?.sendMessage(
                 MessagesManager.getComponent(
-                    "messages.commands.currency.$actionName.target",
+                    "messages.commands.currency.$commandName.target",
                     resolver
                 )
             )

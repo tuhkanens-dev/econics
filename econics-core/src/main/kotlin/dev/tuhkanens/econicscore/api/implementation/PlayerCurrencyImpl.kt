@@ -9,8 +9,8 @@ import dev.tuhkanens.econicsapi.result.EconicsResult
 import dev.tuhkanens.econicscore.database.table.CurrenciesTable
 import dev.tuhkanens.econicscore.database.table.PlayerCurrenciesTable
 import dev.tuhkanens.econicscore.database.table.PlayersTable
+import dev.tuhkanens.econicscore.event.EventSuppressor
 import dev.tuhkanens.econicscore.manager.DatabaseManager
-import org.bukkit.Bukkit
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.eq
@@ -132,9 +132,7 @@ class PlayerCurrencyImpl : PlayerCurrencyAPI {
                     }
                 }
 
-                Bukkit.getPluginManager().callEvent(
-                    PlayerCurrencyChangeEvent(uuid, currencyId, newAmount)
-                )
+                EventSuppressor.callEvent(PlayerCurrencyChangeEvent(uuid, currencyId, newAmount))
 
                 EconicsResult.Success
             }

@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "dev.tuhkanens.econics"
-version = "1.0.3"
+version = "2.0.0"
 
 repositories {
     mavenCentral()
@@ -21,6 +21,7 @@ dependencies {
     implementation("net.flectone:libby-core:2.0.0")
     implementation("net.flectone:libby-paper:2.0.0")
 
+    implementation("org.jetbrains.exposed:exposed-migration-jdbc:1.3.1")
     implementation("org.jetbrains.exposed:exposed-core:1.3.1")
     implementation("org.jetbrains.exposed:exposed-jdbc:1.3.1")
 

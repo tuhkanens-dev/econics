@@ -1,7 +1,7 @@
 package dev.tuhkanens.econicscore.manager
 
 import dev.tuhkanens.econicscore.Main
-import dev.tuhkanens.econicscore.database.DatabaseInterface
+import dev.tuhkanens.econicscore.database.api.DatabaseAPI
 import dev.tuhkanens.econicscore.database.base.MySQLDatabase
 import dev.tuhkanens.econicscore.database.base.SQLiteDatabase
 
@@ -9,8 +9,8 @@ object DatabaseManager {
 
     private val plugin = Main.plugin
 
-    private lateinit var currentDatabase: DatabaseInterface
-    private lateinit var localDatabase: DatabaseInterface
+    private lateinit var currentDatabase: DatabaseAPI
+    private lateinit var localDatabase: DatabaseAPI
 
     fun connect() {
         if (::currentDatabase.isInitialized) {
@@ -50,7 +50,7 @@ object DatabaseManager {
     }
 
     inline fun <T> transactionBoth(
-        block: (DatabaseInterface) -> T
+        block: (DatabaseAPI) -> T
     ): T {
         val current = getCurrent()
         val result = block(current)
@@ -67,7 +67,7 @@ object DatabaseManager {
         return result
     }
 
-    fun getCurrent(): DatabaseInterface = currentDatabase
-    fun getLocal(): DatabaseInterface = localDatabase
+    fun getCurrent(): DatabaseAPI = currentDatabase
+    fun getLocal(): DatabaseAPI = localDatabase
 
 }

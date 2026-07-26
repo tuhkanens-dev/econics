@@ -11,7 +11,6 @@ import dev.tuhkanens.econicscore.Main
 import dev.tuhkanens.econicscore.command.CurrencyCommand
 import dev.tuhkanens.econicscore.database.table.CurrenciesTable
 import org.jetbrains.exposed.v1.core.eq
-import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
@@ -73,17 +72,17 @@ class CurrencyImpl : CurrencyAPI {
 
         val commandsNode = currencyNode.node("commands")
 
-        CurrencyCommands.entries.forEach { action ->
-            val actionName = action.name.lowercase()
-            val commandNode = commandsNode.node(actionName)
+        CurrencyCommands.entries.forEach { command ->
+            val commandName = command.name.lowercase()
+            val commandNode = commandsNode.node(commandName)
 
-            val commandData = currencyData.commands[action]
+            val commandData = currencyData.commands.commands[command]
 
             commandNode.node("enabled").set(commandData?.enabled ?: true)
 
             val permNode = commandNode.node("permission")
             permNode.node("value").set(
-                commandData?.permission?.value ?: "econics.$currencyId.$actionName"
+                commandData?.permission?.value ?: "econics.$currencyId.$commandName"
             )
             permNode.node("required").set(
                 commandData?.permission?.required ?: true

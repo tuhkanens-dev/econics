@@ -2,8 +2,11 @@ package dev.tuhkanens.econicscore.manager
 
 import dev.tuhkanens.econicsapi.EconicsAPI
 import dev.tuhkanens.econicsapi.api.CurrencyAPI
+import dev.tuhkanens.econicsapi.data.CurrencyCommandData
 import dev.tuhkanens.econicsapi.data.CurrencyCommands
+import dev.tuhkanens.econicsapi.data.CurrencyCommandsData
 import dev.tuhkanens.econicsapi.data.CurrencyFileData
+import dev.tuhkanens.econicsapi.data.CurrencyPermissionData
 import dev.tuhkanens.econicscore.Main
 import dev.tuhkanens.econicscore.command.CurrencyCommand
 import org.spongepowered.configurate.yaml.YamlConfigurationLoader
@@ -109,24 +112,28 @@ object CurrencyManager {
             return
         }
 
-        val commands = mutableMapOf<CurrencyCommands, CurrencyFileData.CommandData>()
+        val commands = mutableMapOf<CurrencyCommands, CurrencyCommandData>()
+
         val commandsNode = currencyNode.node("commands")
+        val commandsEnabled = commandsNode.node("enabled").getBoolean(true)
 
-        for (action in CurrencyCommands.entries) {
-            val key = action.name.lowercase()
-            val actionNode = commandsNode.node(key)
+        for (command in CurrencyCommands.entries) {
+            val key = command.name.lowercase()
+            val commandNode = commandsNode.node("commands").node(key)
 
-            val enabled = actionNode.node("enabled").getBoolean(false)
+            val enabled = commandNode.node("enabled").getBoolean(false)
 
-            val permissionNode = actionNode.node("permission")
+            val permissionNode = commandNode.node("permission")
 
             val value = permissionNode.node("value").string ?: ""
             val required = permissionNode.node("required").getBoolean(false)
 
-            val permission = CurrencyFileData.PermissionData(value, required)
+            val permission = CurrencyPermissionData(value, required)
 
-            commands[action] = CurrencyFileData.CommandData(enabled, permission)
+            commands[command] = CurrencyCommandData(enabled, permission)
         }
+
+        val commandsData = CurrencyCommandsData(commandsEnabled, commands)
 
         val defaultAmountStr = currencyNode.node("default-amount").string
         val defaultAmount: BigDecimal = if (defaultAmountStr.isNullOrBlank()) {
@@ -151,7 +158,7 @@ object CurrencyManager {
             defaultAmount = defaultAmount,
             decimalPattern = decimalPattern,
             localCurrency = localCurrency,
-            commands = commands
+            commands = commandsData
         )
 
         currencies[currencyId] = currencyFileData

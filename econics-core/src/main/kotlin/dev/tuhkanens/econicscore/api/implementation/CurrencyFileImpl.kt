@@ -1,8 +1,11 @@
 package dev.tuhkanens.econicscore.api.implementation
 
 import dev.tuhkanens.econicsapi.api.CurrencyFileAPI
+import dev.tuhkanens.econicsapi.data.CurrencyCommandData
 import dev.tuhkanens.econicsapi.data.CurrencyCommands
+import dev.tuhkanens.econicsapi.data.CurrencyCommandsData
 import dev.tuhkanens.econicsapi.data.CurrencyFileData
+import dev.tuhkanens.econicsapi.data.CurrencyPermissionData
 import dev.tuhkanens.econicscore.manager.CurrencyManager
 import dev.tuhkanens.econicscore.manager.DatabaseManager
 import org.jetbrains.exposed.v1.jdbc.Database
@@ -32,15 +35,16 @@ class CurrencyFileImpl : CurrencyFileAPI {
         return getCurrency(currencyId)?.defaultAmount
     }
 
-    override fun getCommands(currencyId: String): Map<CurrencyCommands, CurrencyFileData.CommandData>? {
+    override fun getCommands(currencyId: String): CurrencyCommandsData? {
         return getCurrency(currencyId)?.commands
     }
 
-    override fun getCommand(currencyId: String, action: CurrencyCommands): CurrencyFileData.CommandData? {
-        return getCurrency(currencyId)?.commands[action]
+    override fun getCommand(currencyId: String, command: CurrencyCommands): CurrencyCommandData? {
+        return getCommands(currencyId)?.commands[command]
     }
-    override fun getPermission(currencyId: String, action: CurrencyCommands): CurrencyFileData.PermissionData? {
-        return getCommand(currencyId, action)?.permission
+
+    override fun getPermission(currencyId: String, command: CurrencyCommands): CurrencyPermissionData? {
+        return getCommand(currencyId, command)?.permission
     }
 
     override fun getDecimalPattern(currencyId: String): String? {

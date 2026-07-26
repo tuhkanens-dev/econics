@@ -1,8 +1,8 @@
-package dev.tuhkanens.econicscore.database
+package dev.tuhkanens.econicscore.database.api
 
 import org.jetbrains.exposed.v1.jdbc.Database
 
-interface DatabaseInterface {
+interface DatabaseAPI {
     fun connect()
     fun disconnect()
     fun getDatabase(): Database
