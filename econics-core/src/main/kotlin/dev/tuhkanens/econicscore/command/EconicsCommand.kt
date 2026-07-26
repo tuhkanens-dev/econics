@@ -1,6 +1,8 @@
 package dev.tuhkanens.econicscore.command
 
+import dev.jorel.commandapi.arguments.StringArgument
 import dev.jorel.commandapi.executors.CommandExecutor
+import dev.jorel.commandapi.kotlindsl.argument
 import dev.jorel.commandapi.kotlindsl.commandTree
 import dev.jorel.commandapi.kotlindsl.literalArgument
 import dev.tuhkanens.econicsapi.EconicsAPI
@@ -60,25 +62,33 @@ class EconicsCommand {
                     throw CommandUtils.message("errors.commands.not-enough-arguments")
                 })
 
-                CurrencyManager.getCurrencies().values.forEach { currency ->
-                    literalArgument(currency.id) {
-                        executes(CommandExecutor { _, _ ->
-                            throw CommandUtils.message("errors.commands.required-confirm")
-                        })
+                argument(
+                    StringArgument("currency")
+                        .replaceSuggestions { _, builder ->
+                            CurrencyManager.getCurrencies().keys.forEach { builder.suggest(it) }
+                            builder.buildFuture()
+                        }
+                ) {
+                    executes(CommandExecutor { _, _ ->
+                        throw CommandUtils.message("errors.commands.required-confirm")
+                    })
 
-                        literalArgument("confirm") {
-                            executes(CommandExecutor { sender, _ ->
-                                EconicsAPI.getAPI<CurrencyAPI>().removeCurrency(currency.id)
+                    literalArgument("confirm") {
+                        executes(CommandExecutor { sender, args ->
+                            val currencyId = args["currency"] as String
+                            val currency = CurrencyManager.getCurrencies()[currencyId]
+                                ?: throw CommandUtils.message("errors.commands.unknown-currency")
 
-                                sender.sendMessage(
-                                    MessagesManager.getComponent(
-                                        "messages.commands.econics.remove",
-                                        Placeholder.parsed("currency_name", currency.name
-                                        )
+                            EconicsAPI.getAPI<CurrencyAPI>().removeCurrency(currency.id)
+
+                            sender.sendMessage(
+                                MessagesManager.getComponent(
+                                    "messages.commands.econics.remove",
+                                    Placeholder.parsed("currency_name", currency.name
                                     )
                                 )
-                            })
-                        }
+                            )
+                        })
                     }
                 }
             }

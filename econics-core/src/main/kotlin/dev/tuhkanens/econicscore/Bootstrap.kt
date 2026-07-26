@@ -49,8 +49,8 @@ class Bootstrap(private val plugin: Main) {
     }
 
     private fun registerCommands() {
-        EconicsCommand().register()
         CurrencyCommand.register()
+        EconicsCommand().register()
     }
 
     private fun createDataFolder() {
