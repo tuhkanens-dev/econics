@@ -81,6 +81,9 @@ class EconicsCommand {
 
                             EconicsAPI.getAPI<CurrencyAPI>().removeCurrency(currency.id)
 
+                            CurrencyCommand.reload()
+                            EconicsPlaceholderExpansion.registerPlaceholders()
+
                             sender.sendMessage(
                                 MessagesManager.getComponent(
                                     "messages.commands.econics.remove",
