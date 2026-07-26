@@ -1,14 +1,11 @@
 package dev.tuhkanens.econicscore.command
 
-import com.mojang.brigadier.exceptions.BuiltInExceptions
-import com.mojang.brigadier.exceptions.CommandSyntaxException
 import dev.jorel.commandapi.CommandAPI
 import dev.jorel.commandapi.CommandAPICommand
 import dev.jorel.commandapi.arguments.Argument
 import dev.jorel.commandapi.arguments.EntitySelectorArgument
 import dev.jorel.commandapi.arguments.StringArgument
 import dev.jorel.commandapi.executors.CommandExecutor
-import dev.jorel.commandapi.exceptions.WrapperCommandSyntaxException
 import dev.tuhkanens.econicsapi.EconicsAPI
 import dev.tuhkanens.econicsapi.api.CurrencyFileAPI
 import dev.tuhkanens.econicsapi.api.PlayerCurrencyAPI
@@ -16,7 +13,7 @@ import dev.tuhkanens.econicsapi.data.CurrencyCommands
 import dev.tuhkanens.econicsapi.result.EconicsResult
 import dev.tuhkanens.econicscore.manager.CurrencyManager
 import dev.tuhkanens.econicscore.manager.MessagesManager
-import io.papermc.paper.command.brigadier.MessageComponentSerializer
+import dev.tuhkanens.econicscore.utils.CommandUtils
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver
 import org.bukkit.Bukkit
@@ -37,7 +34,7 @@ object CurrencyCommand {
         }
     }
 
-    fun registerCurrency(currencyId: String) {
+    private fun registerCurrency(currencyId: String) {
         if (registeredCommands.contains(currencyId)) return
 
         val currency = CurrencyManager.getCurrencies()[currencyId] ?: return
@@ -53,7 +50,7 @@ object CurrencyCommand {
         CommandAPICommand(currency.id)
             .withSubcommands(*actionSubcommands)
             .executes(CommandExecutor { _, _ ->
-                throw throwMessage("errors.commands.not-enough-arguments")
+                throw CommandUtils.message("errors.commands.not-enough-arguments")
             })
             .register()
 
@@ -62,7 +59,7 @@ object CurrencyCommand {
         Bukkit.getOnlinePlayers().forEach(Player::updateCommands)
     }
 
-    fun unregisterCurrency(currencyId: String) {
+    private fun unregisterCurrency(currencyId: String) {
         if (!registeredCommands.contains(currencyId)) return
 
         CommandAPI.unregister(currencyId)
@@ -97,7 +94,7 @@ object CurrencyCommand {
                     try {
                         BigDecimal(args[1] as String)
                     } catch (_: Exception) {
-                        throw throwMessage("errors.commands.incorrect-number-format")
+                        throw CommandUtils.message("errors.commands.incorrect-number-format")
                     }
                 } else BigDecimal.ZERO
 
@@ -114,7 +111,7 @@ object CurrencyCommand {
         amount: BigDecimal
     ) {
         val currencyName = EconicsAPI.getAPI<CurrencyFileAPI>().getName(currencyId)
-            ?: throw throwMessage("errors.commands.unknown-currency")
+            ?: throw CommandUtils.message("errors.commands.unknown-currency")
 
         val api = EconicsAPI.getAPI<PlayerCurrencyAPI>()
 
@@ -138,14 +135,14 @@ object CurrencyCommand {
                 }
             }
             CurrencyCommands.PAY -> {
-                if (sender !is Player) throw throwMessage("errors.commands.only-player")
-                if (sender == player) throw throwMessage("errors.commands.can-not-self")
+                if (sender !is Player) throw CommandUtils.message("errors.commands.only-player")
+                if (sender == player) throw CommandUtils.message("errors.commands.can-not-self")
 
                 val balance = when (val result = api.getPlayerCurrency(sender.uniqueId, currencyId)) {
                     is EconicsResult.GetSuccess -> result.data
                     else -> BigDecimal.ZERO
                 }
-                if (balance < amount) throw throwMessage("errors.commands.not-enough-currency")
+                if (balance < amount) throw CommandUtils.message("errors.commands.not-enough-currency")
 
                 api.removePlayerCurrency(sender.uniqueId, currencyId, amount)
                 api.addPlayerCurrency(player.uniqueId, currencyId, amount)
@@ -178,16 +175,5 @@ object CurrencyCommand {
                 )
             )
         }
-    }
-
-    private fun throwMessage(key: String): WrapperCommandSyntaxException {
-        return WrapperCommandSyntaxException(
-            CommandSyntaxException(
-                BuiltInExceptions().literalIncorrect(),
-                MessageComponentSerializer.message().serialize(
-                    MessagesManager.getComponent(key)
-                )
-            )
-        )
     }
 }

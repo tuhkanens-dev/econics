@@ -2,13 +2,18 @@ package dev.tuhkanens.econicscore.manager
 
 import dev.tuhkanens.econicsapi.EconicsAPI
 import dev.tuhkanens.econicsapi.api.CurrencyAPI
+import dev.tuhkanens.econicsapi.api.PlayerAPI
+import dev.tuhkanens.econicsapi.api.PlayerCurrencyAPI
 import dev.tuhkanens.econicsapi.data.CurrencyCommandData
 import dev.tuhkanens.econicsapi.data.CurrencyCommands
 import dev.tuhkanens.econicsapi.data.CurrencyCommandsData
 import dev.tuhkanens.econicsapi.data.CurrencyFileData
 import dev.tuhkanens.econicsapi.data.CurrencyPermissionData
+import dev.tuhkanens.econicsapi.result.EconicsResult
 import dev.tuhkanens.econicscore.Main
 import dev.tuhkanens.econicscore.command.CurrencyCommand
+import org.bukkit.Bukkit
+import org.bukkit.entity.Player
 import org.spongepowered.configurate.yaml.YamlConfigurationLoader
 import java.io.File
 import java.math.BigDecimal
@@ -28,17 +33,42 @@ object CurrencyManager {
 
     fun reload() {
 
-        currencies.clear()
-        files.clear()
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, Runnable {
+            val currenciesFolder = File(plugin.dataFolder, "currencies")
+            if (!currenciesFolder.exists()) currenciesFolder.mkdirs()
 
-        val currenciesFolder = File(plugin.dataFolder, "currencies")
-        if (!currenciesFolder.exists()) {
-            currenciesFolder.mkdirs()
-        }
+            copyAllDefaultCurrencies(currenciesFolder)
 
-        copyAllDefaultCurrencies(currenciesFolder)
-        loadAllCurrencyFiles(currenciesFolder)
-        CurrencyCommand.reload()
+            val newFiles = mutableMapOf<String, File>()
+            val newCurrencies = mutableMapOf<String, CurrencyFileData>()
+
+            val ymlFiles = currenciesFolder.listFiles { _, name ->
+                name.endsWith(".yml", ignoreCase = true)
+            }
+            ymlFiles?.forEach { file ->
+                val id = file.nameWithoutExtension
+                val data = loadCurrency(id, file)
+
+                newFiles[id] = file
+                newCurrencies[id] = data
+            }
+
+            Bukkit.getScheduler().runTask(plugin, Runnable {
+                files.clear()
+                files.putAll(newFiles)
+
+                currencies.clear()
+                currencies.putAll(newCurrencies)
+
+                newCurrencies.values.forEach { EconicsAPI.getAPI<CurrencyAPI>().addCurrency(it) }
+
+                CurrencyCommand.reload()
+
+                Bukkit.getOnlinePlayers().forEach { onlinePlayer ->
+                    setPlayerDefaultCurrencies(onlinePlayer)
+                }
+            })
+        })
 
     }
 
@@ -83,23 +113,7 @@ object CurrencyManager {
         }
     }
 
-    private fun loadAllCurrencyFiles(folder: File) {
-        val ymlFiles = folder.listFiles { _, name -> name.endsWith(".yml", ignoreCase = true) }
-            ?: emptyArray()
-
-        if (ymlFiles.isEmpty()) {
-            plugin.logger.warning("No .yml files found in currencies/ folder!")
-            return
-        }
-
-        for (file in ymlFiles) {
-            val currencyId = file.nameWithoutExtension
-            files[currencyId] = file
-            loadCurrency(currencyId, file)
-        }
-    }
-
-    private fun loadCurrency(currencyId: String, file: File) {
+    private fun loadCurrency(currencyId: String, file: File): CurrencyFileData {
         val root = YamlConfigurationLoader.builder()
             .file(file)
             .build()
@@ -107,10 +121,7 @@ object CurrencyManager {
 
         val currencyNode = root.node("currency")
 
-        val currencyName = currencyNode.node("name").string ?: run {
-            plugin.logger.severe("Currency name is not specified in ${file.name}")
-            return
-        }
+        val currencyName = currencyNode.node("name").getString("Currency")
 
         val commands = mutableMapOf<CurrencyCommands, CurrencyCommandData>()
 
@@ -144,7 +155,7 @@ object CurrencyManager {
                 BigDecimal(defaultAmountStr)
             } catch (_: NumberFormatException) {
                 plugin.logger.severe("'default-amount' has invalid numeric value '$defaultAmountStr' in ${file.name}")
-                return
+                BigDecimal.ZERO
             }
         }
 
@@ -152,7 +163,7 @@ object CurrencyManager {
 
         val localCurrency = currencyNode.node("local-currency").getBoolean(false)
 
-        val currencyFileData = CurrencyFileData(
+        return CurrencyFileData(
             id = currencyId,
             name = currencyName,
             defaultAmount = defaultAmount,
@@ -160,10 +171,25 @@ object CurrencyManager {
             localCurrency = localCurrency,
             commands = commandsData
         )
+    }
 
-        currencies[currencyId] = currencyFileData
+    fun setPlayerDefaultCurrencies(player: Player) {
+        val uuid = player.uniqueId
 
-        EconicsAPI.getAPI<CurrencyAPI>().addCurrency(currencyFileData)
+        val playerAPI = EconicsAPI.getAPI<PlayerAPI>()
+        val currencyAPI = EconicsAPI.getAPI<PlayerCurrencyAPI>()
+
+        when (val result = playerAPI.ensurePlayer(uuid, player.name)) {
+            is EconicsResult.Success, is EconicsResult.Already -> {
+                getCurrencies().forEach { (currencyId, data) ->
+                    if (currencyAPI.hasPlayerCurrency(uuid, currencyId) is EconicsResult.NotFound) {
+                        currencyAPI.setPlayerCurrency(uuid, currencyId, data.defaultAmount)
+                    }
+                }
+            }
+            is EconicsResult.Failure -> plugin.logger.severe(result.error)
+            else -> {}
+        }
     }
 
     fun getCurrencies(): ConcurrentHashMap<String, CurrencyFileData> = currencies

@@ -1,7 +1,11 @@
 messages:
   commands:
     econics:
-      reload: "<green>Econics successfully reloaded."
+      reload:
+        config: "<green>Econics config reloaded successfully."
+        messages: "<green>Econics messages reloaded successfully."
+        currencies: "<green>Econics currencies reloaded successfully."
+      remove: "<green><currency_name> successfully removed."
     currency:
       add:
         sender: "You added <gold><amount></gold> to <gold><target></gold>'s <gold><currency_name></gold> balance."
@@ -27,3 +31,4 @@ errors:
     unknown-currency: "Unknown currency"
     can-not-self: "You cannot run this command on yourself"
     only-player: "Only the player can execute this command"
+    required-confirm: "Confirmation is required to perform the action."

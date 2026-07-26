@@ -11,6 +11,7 @@ import dev.tuhkanens.econicscore.manager.CurrencyManager
 import dev.tuhkanens.econicscore.manager.DatabaseManager
 import dev.tuhkanens.econicscore.manager.MessagesManager
 import dev.tuhkanens.econicscore.placeholder.EconicsPlaceholderExpansion
+import dev.tuhkanens.econicscore.utils.EconicsAsync
 
 class Bootstrap(private val plugin: Main) {
 
@@ -33,12 +34,14 @@ class Bootstrap(private val plugin: Main) {
 
         registerListeners()
         registerCommands()
-        registerPlaceholders()
+
+        EconicsPlaceholderExpansion.registerPlaceholders()
     }
 
     fun disable() {
         DatabaseManager.disconnect()
         CommandAPI.onDisable()
+        EconicsAsync.shutdown()
     }
 
     private fun registerListeners() {
@@ -48,20 +51,6 @@ class Bootstrap(private val plugin: Main) {
     private fun registerCommands() {
         EconicsCommand().register()
         CurrencyCommand.register()
-    }
-
-    private fun registerPlaceholders() {
-        if (plugin.server.pluginManager.getPlugin("PlaceholderAPI") != null) {
-            try {
-                EconicsPlaceholderExpansion().register()
-                plugin.logger.info("PlaceholderAPI placeholders registered")
-            } catch (e: Exception) {
-                plugin.logger.warning("Failed to register PlaceholderAPI placeholders: ${e.message}")
-            }
-        } else {
-            plugin.logger.info("PlaceholderAPI not found, skipping placeholders")
-        }
-
     }
 
     private fun createDataFolder() {

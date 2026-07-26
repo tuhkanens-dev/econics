@@ -4,8 +4,8 @@ plugins {
     id("com.gradleup.shadow") version "8.3.0"
 }
 
-group = "dev.tuhkanens.econics"
-version = "2.0.0"
+group = "dev.tuhkanens.econicscore"
+version = "2.1.0"
 
 repositories {
     mavenCentral()

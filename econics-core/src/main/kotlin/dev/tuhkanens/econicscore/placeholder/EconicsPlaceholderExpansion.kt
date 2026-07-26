@@ -5,12 +5,11 @@ import dev.tuhkanens.econicsapi.api.CurrencyFileAPI
 import dev.tuhkanens.econicsapi.api.PlayerCurrencyAPI
 import dev.tuhkanens.econicsapi.result.EconicsResult
 import dev.tuhkanens.econicscore.Main
-import dev.tuhkanens.econicscore.manager.CurrencyManager
 import me.clip.placeholderapi.expansion.PlaceholderExpansion
 import org.bukkit.OfflinePlayer
 import java.util.*
 
-class EconicsPlaceholderExpansion : PlaceholderExpansion() {
+object EconicsPlaceholderExpansion : PlaceholderExpansion() {
 
     private val plugin = Main.plugin
 
@@ -62,6 +61,22 @@ class EconicsPlaceholderExpansion : PlaceholderExpansion() {
             EconicsAPI.getAPI<CurrencyFileAPI>().getFormatDecimalPattern(currencyId, amount)
         } else {
             amount.toPlainString()
+        }
+    }
+
+    fun registerPlaceholders() {
+        if (plugin.server.pluginManager.getPlugin("PlaceholderAPI") != null) {
+            try {
+                if (isRegistered) {
+                    unregister()
+                }
+                register()
+                plugin.logger.info("PlaceholderAPI placeholders registered")
+            } catch (e: Exception) {
+                plugin.logger.warning("Failed to register PlaceholderAPI placeholders: ${e.message}")
+            }
+        } else {
+            plugin.logger.info("PlaceholderAPI not found, skipping placeholders")
         }
     }
 }

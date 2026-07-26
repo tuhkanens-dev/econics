@@ -36,12 +36,4 @@ object ConfigManager {
         root = yaml.load()
     }
 
-//    private fun save() {
-//        try {
-//            yaml.save(root)
-//        } catch (e: Exception) {
-//            e.printStackTrace()
-//        }
-//    }
-
 }

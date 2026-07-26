@@ -3,8 +3,8 @@ plugins {
     `maven-publish`
 }
 
-group = "dev.tuhkanens.econics"
-version = "2.0.0"
+group = "dev.tuhkanens.econicsapi"
+version = "2.1.0"
 
 repositories {
     mavenCentral()

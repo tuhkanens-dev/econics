@@ -9,4 +9,5 @@ interface CurrencyAPI {
     fun removeCurrency(currencyId: String): EconicsResult<Nothing>
     fun getCurrency(currencyId: String): EconicsResult<CurrencyData>
     fun hasCurrency(currencyId: String): EconicsResult<Nothing>
+    fun updateCurrencies()
 }

@@ -10,6 +10,10 @@ import dev.tuhkanens.econicsapi.result.EconicsResult
 import dev.tuhkanens.econicscore.Main
 import dev.tuhkanens.econicscore.command.CurrencyCommand
 import dev.tuhkanens.econicscore.database.table.CurrenciesTable
+import dev.tuhkanens.econicscore.manager.CurrencyManager
+import dev.tuhkanens.econicscore.placeholder.EconicsPlaceholderExpansion
+import dev.tuhkanens.econicscore.utils.EconicsAsync
+import org.bukkit.Bukkit
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.insert
@@ -26,28 +30,29 @@ class CurrencyImpl : CurrencyAPI {
 
     override fun addCurrency(currencyData: CurrencyFileData): EconicsResult<Nothing> {
         return try {
-            transaction(api.getDatabase(currencyData.id)) {
-                val exists = CurrenciesTable.selectAll()
-                    .where { CurrenciesTable.id eq currencyData.id }
-                    .singleOrNull() != null
+            EconicsAsync.runAsync {
+                transaction(api.getDatabase(currencyData.id)) {
+                    val exists = CurrenciesTable.selectAll()
+                        .where { CurrenciesTable.id eq currencyData.id }
+                        .singleOrNull() != null
 
-                if (exists) {
-                    return@transaction EconicsResult.Already
+                    if (exists) {
+                        return@transaction EconicsResult.Already
+                    }
+
+                    CurrenciesTable.insert {
+                        it[CurrenciesTable.id] = currencyData.id
+                        it[CurrenciesTable.name] = currencyData.name
+                        it[CurrenciesTable.defaultAmount] = currencyData.defaultAmount
+                        it[CurrenciesTable.decimalPattern] = currencyData.decimalPattern
+                    }
+
+                    addFileCurrency(currencyData)
+                    EconicsResult.Success
                 }
-
-                CurrenciesTable.insert {
-                    it[CurrenciesTable.id] = currencyData.id
-                    it[CurrenciesTable.name] = currencyData.name
-                    it[CurrenciesTable.defaultAmount] = currencyData.defaultAmount
-                    it[CurrenciesTable.decimalPattern] = currencyData.decimalPattern
-                }
-
-                addFileCurrency(currencyData)
-                CurrencyCommand.reload()
-                EconicsResult.Success
             }
         } catch (e: Exception) {
-            EconicsResult.Failure(e.message ?: "Unknown error")
+            EconicsResult.Failure(e.cause?.message ?: e.message ?: "Unknown error")
         }
     }
 
@@ -94,16 +99,17 @@ class CurrencyImpl : CurrencyAPI {
 
     override fun removeCurrency(currencyId: String): EconicsResult<Nothing> {
         return try {
-            transaction(api.getDatabase(currencyId)) {
-                val deleted = CurrenciesTable.deleteWhere { CurrenciesTable.id eq currencyId }
-                if (deleted > 0) {
-                    removeFileCurrency(currencyId)
-                    CurrencyCommand.reload()
-                    EconicsResult.Success
-                } else EconicsResult.NotFound
+            EconicsAsync.runAsync {
+                transaction(api.getDatabase(currencyId)) {
+                    val deleted = CurrenciesTable.deleteWhere { CurrenciesTable.id eq currencyId }
+                    if (deleted > 0) {
+                        removeFileCurrency(currencyId)
+                        EconicsResult.Success
+                    } else EconicsResult.NotFound
+                }
             }
         } catch (e: Exception) {
-            EconicsResult.Failure(e.message ?: "Unknown error")
+            EconicsResult.Failure(e.cause?.message ?: e.message ?: "Unknown error")
         }
     }
 
@@ -125,37 +131,46 @@ class CurrencyImpl : CurrencyAPI {
 
     override fun getCurrency(currencyId: String): EconicsResult<CurrencyData> {
         return try {
-            transaction(api.getDatabase(currencyId)) {
-                val currencyRow = CurrenciesTable.selectAll()
-                    .where { CurrenciesTable.id eq currencyId }
-                    .singleOrNull() ?: return@transaction EconicsResult.NotFound
+            EconicsAsync.runAsync {
+                transaction(api.getDatabase(currencyId)) {
+                    val currencyRow = CurrenciesTable.selectAll()
+                        .where { CurrenciesTable.id eq currencyId }
+                        .singleOrNull() ?: return@transaction EconicsResult.NotFound
 
-                val currency = CurrencyData(
-                    id = currencyRow[CurrenciesTable.id],
-                    name = currencyRow[CurrenciesTable.name],
-                    defaultAmount = currencyRow[CurrenciesTable.defaultAmount],
-                    decimalPattern = currencyRow[CurrenciesTable.decimalPattern],
-                )
+                    val currency = CurrencyData(
+                        id = currencyRow[CurrenciesTable.id],
+                        name = currencyRow[CurrenciesTable.name],
+                        defaultAmount = currencyRow[CurrenciesTable.defaultAmount],
+                        decimalPattern = currencyRow[CurrenciesTable.decimalPattern],
+                    )
 
-                EconicsResult.GetSuccess(currency)
+                    EconicsResult.GetSuccess(currency)
+                }
             }
         } catch (e: Exception) {
-            EconicsResult.Failure(e.message ?: "Unknown error")
+            EconicsResult.Failure(e.cause?.message ?: e.message ?: "Unknown error")
         }
     }
 
     override fun hasCurrency(currencyId: String): EconicsResult<Nothing> {
         return try {
-            transaction(api.getDatabase(currencyId)) {
-                val exists = CurrenciesTable.selectAll()
-                    .where { CurrenciesTable.id eq currencyId }
-                    .singleOrNull() != null
+            EconicsAsync.runAsync {
+                transaction(api.getDatabase(currencyId)) {
+                    val exists = CurrenciesTable.selectAll()
+                        .where { CurrenciesTable.id eq currencyId }
+                        .singleOrNull() != null
 
-                if (exists) EconicsResult.Success else EconicsResult.NotFound
+                    if (exists) EconicsResult.Success else EconicsResult.NotFound
+                }
             }
         } catch (e: Exception) {
-            EconicsResult.Failure(e.message ?: "Unknown error")
+            EconicsResult.Failure(e.cause?.message ?: e.message ?: "Unknown error")
         }
+    }
+
+    override fun updateCurrencies() {
+        CurrencyManager.reload()
+        EconicsPlaceholderExpansion.registerPlaceholders()
     }
 
 }
