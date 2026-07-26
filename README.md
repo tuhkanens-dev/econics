@@ -1,32 +1,60 @@
 ### Econics
 
-A powerful and flexible currency plugin for Paper servers that allows you to create and manage multiple custom currencies with ease.
+A flexible currency plugin for Paper servers. Manage multiple custom currencies
+easily with a clean and efficient system.
 
 **Features**
-- Multi-Currency System — Create unlimited custom currencies with independent configurations
-- Database Support — MySQL and SQLite support with automatic connection pooling via HikariCP
-- Developer-Friendly API — Clean API for other plugins
-- Customizable Messages — Fully translatable and customizable plugin messages
-- PlaceholderAPI Integration — Display currency balances using placeholders
-- Currency Formatting — Support for custom formatting and symbols
-- Per-Currency Commands — Enable or disable commands individually for each currency
-- Custom Permissions — Assign custom permissions to commands per currency
-- Modern Stack — Written in Kotlin with Exposed ORM
+
+- Multi-Currency: Create as many currencies as you need.
+- Database Support: MySQL and SQLite support with HikariCP pooling.
+- Developer API: Simple API for other plugins to hook into.
+- Customizable: Change all messages and currency formatting to fit your
+  server.
+- PlaceholderAPI: Built-in placeholders to show balances.
+- Command Control: Enable/disable commands and set permissions for each
+  currency.
+- Modern Code: Written in Kotlin with Exposed ORM for stable data handling.
+
+
+**Admin Commands**
+- econics reload (required permission: `econics.admin.reload`)
+
+**Soft Dependencies**
+- PlaceholderAPI
+
+**Requirements**
+- Version: 1.21 or higher.
+- Java: 21 or higher.
 
 **For Developers**
 
-The plugin is written in Kotlin with Gradle. You can import the API library using `compileOnly`.
+Econics is built with Gradle. You can add the API to your project like this:
 
 **Gradle (Kotlin DSL)**
 ```kotlin
-compileOnly("dev.tuhkanens.econicsapi:econics-api:2.0.0")
+repositories {
+    mavenCentral()
+    maven { url = uri("https://jitpack.io") }
+}
+dependencis {
+    compileOnly("com.github.tuhkanens-dev:econics:2.0.0")
+}
 ```
 **Maven (Xml)**
 ```xml
-<dependency>
-    <groupId>dev.tuhkanens.econicsapi</groupId>
-    <artifactId>econics-api</artifactId>
-    <version>2.0.0</version>
-    <scope>provided</scope>
-</dependency>
+<repositories>
+    <repository>
+        <id>jitpack.io</id>
+        <url>https://jitpack.io</url>
+    </repository>
+</repositories>
+
+<dependencies>
+    <dependency>
+        <groupId>com.github.tuhkanens-dev</groupId>
+        <artifactId>econics</artifactId>
+        <version>2.0.0</version>
+        <scope>provided</scope>
+    </dependency>
+</dependencies>
 ```
