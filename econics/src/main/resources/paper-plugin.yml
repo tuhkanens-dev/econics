@@ -1,0 +1,13 @@
+name: Econics
+version: 2.2.0
+main: dev.tuhkanens.econicscore.Main
+api-version: '1.21'
+authors: [TuhkanenS]
+folia-supported: true
+
+dependencies:
+  server:
+    PlaceholderAPI:
+      load: BEFORE
+      required: false
+      join-classpath: true

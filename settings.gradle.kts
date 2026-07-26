@@ -1,3 +1,4 @@
 rootProject.name = "Econics"
-include("econics-api")
-include("econics-core")
+
+include("api")
+include("econics")
