@@ -10,6 +10,7 @@ import dev.tuhkanens.econicsapi.result.EconicsResult
 import dev.tuhkanens.econicscore.Main
 import dev.tuhkanens.econicscore.command.CurrencyCommand
 import dev.tuhkanens.econicscore.database.table.CurrenciesTable
+import dev.tuhkanens.econicscore.database.table.PlayerCurrenciesTable
 import dev.tuhkanens.econicscore.manager.CurrencyManager
 import dev.tuhkanens.econicscore.placeholder.EconicsPlaceholderExpansion
 import dev.tuhkanens.econicscore.utils.EconicsAsync
@@ -103,6 +104,7 @@ class CurrencyImpl : CurrencyAPI {
                 transaction(api.getDatabase(currencyId)) {
                     val deleted = CurrenciesTable.deleteWhere { CurrenciesTable.id eq currencyId }
                     if (deleted > 0) {
+                        PlayerCurrenciesTable.deleteWhere { PlayerCurrenciesTable.currency eq currencyId }
                         removeFileCurrency(currencyId)
                         EconicsResult.Success
                     } else EconicsResult.NotFound
