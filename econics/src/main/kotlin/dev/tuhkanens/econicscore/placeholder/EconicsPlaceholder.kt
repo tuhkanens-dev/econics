@@ -11,7 +11,7 @@ object EconicsPlaceholder {
         if (plugin.server.pluginManager.getPlugin("PlaceholderAPI") != null) {
             try {
                 hasPlaceholderAPI = true
-                EconicsPlaceholderExpansion.load()
+                EconicsPlaceholderExpansion.reload()
                 plugin.logger.info("PlaceholderAPI placeholders registered")
             } catch (e: Exception) {
                 plugin.logger.warning("Failed to register PlaceholderAPI placeholders: ${e.message}")

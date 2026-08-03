@@ -91,7 +91,8 @@ class EconicsCommand {
                             if (!FoliaUtils.getLib().isFolia) {
                                 CurrencyCommand.reload()
                             }
-                            EconicsPlaceholder.reload()
+
+                            EconicsAPI.getAPI<CurrencyAPI>().updateCurrencies()
 
                             sender.sendMessage(
                                 MessagesManager.getComponent(

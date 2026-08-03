@@ -1,23 +1,7 @@
 plugins {
-    kotlin("jvm") version "2.4.0"
-    kotlin("plugin.serialization") version "2.4.0"
-    id("com.gradleup.shadow") version "8.3.0"
-}
-
-group = "dev.tuhkanens.econicscore"
-version = "2.2.1"
-
-repositories {
-    mavenCentral()
-    maven("https://repo.papermc.io/repository/maven-public/") {
-        name = "papermc-repo"
-    }
-    maven("https://repo.extendedclip.com/content/repositories/placeholderapi/") {
-        name = "helpchat"
-    }
-    maven("https://repo.tcoded.com/releases") {
-        name = "tcoded-releases"
-    }
+    kotlin("jvm")
+    kotlin("plugin.serialization")
+    id("com.gradleup.shadow")
 }
 
 dependencies {
@@ -68,11 +52,6 @@ tasks {
     build {
         dependsOn("shadowJar")
     }
-}
-
-val targetJavaVersion = 21
-kotlin {
-    jvmToolchain(targetJavaVersion)
 }
 
 tasks.processResources {

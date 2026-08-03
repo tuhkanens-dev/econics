@@ -6,8 +6,8 @@ object EconicsAPI {
 
     val registry: ConcurrentHashMap<Class<*>, Any> = ConcurrentHashMap()
 
-    fun <T : Any> register(clazz: Class<*>, implementation: T) {
-        registry[clazz] = implementation
+    inline fun <reified T : Any> registerAPI(implementation: T) {
+        registry[T::class.java] = implementation
     }
 
     inline fun <reified T : Any> getAPI(): T {

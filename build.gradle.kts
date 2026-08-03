@@ -1,29 +1,41 @@
+import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
+
 plugins {
-    kotlin("jvm") version "2.4.0"
+    base
+    kotlin("jvm") version "2.4.0" apply false
+    kotlin("plugin.serialization") version "2.4.0" apply false
+    id("com.gradleup.shadow") version "9.3.0" apply false
     `maven-publish`
 }
 
-group = "dev.tuhkanens"
-version = "2.2.1"
+allprojects {
+    group = "dev.tuhkanens.econics"
+    version = "2.2.2"
 
-repositories {
-    mavenCentral()
+    repositories {
+        mavenCentral()
+    }
 }
 
-dependencies {
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+subprojects {
+    plugins.apply("org.jetbrains.kotlin.jvm")
+
+    repositories {
+        maven("https://repo.papermc.io/repository/maven-public/")
+        maven("https://repo.extendedclip.com/content/repositories/placeholderapi/")
+        maven("https://repo.tcoded.com/releases")
+    }
+
+    configure<KotlinJvmProjectExtension> {
+        jvmToolchain(21)
+    }
 }
 
 tasks {
-    build {
+    named("build") {
         dependsOn(subprojects.map { it.tasks.named("build") })
     }
-    clean {
+    named("clean") {
         dependsOn(subprojects.map { it.tasks.named("clean") })
     }
-}
-
-val targetJavaVersion = 21
-kotlin {
-    jvmToolchain(targetJavaVersion)
 }

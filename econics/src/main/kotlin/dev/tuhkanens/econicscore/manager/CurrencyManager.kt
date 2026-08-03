@@ -199,6 +199,11 @@ object CurrencyManager {
         }
     }
 
+    fun removeCurrency(currencyId: String) {
+        files.remove(currencyId)
+        currencies.remove(currencyId)
+    }
+    
     fun getCurrencies(): ConcurrentHashMap<String, CurrencyFileData> = currencies
 
 }

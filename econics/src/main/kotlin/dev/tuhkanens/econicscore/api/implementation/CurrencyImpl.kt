@@ -106,6 +106,7 @@ class CurrencyImpl : CurrencyAPI {
                     val deleted = CurrenciesTable.deleteWhere { CurrenciesTable.id eq currencyId }
                     if (deleted > 0) {
                         PlayerCurrenciesTable.deleteWhere { PlayerCurrenciesTable.currency eq currencyId }
+                        CurrencyManager.removeCurrency(currencyId)
                         removeFileCurrency(currencyId)
                         EconicsResult.Success
                     } else EconicsResult.NotFound

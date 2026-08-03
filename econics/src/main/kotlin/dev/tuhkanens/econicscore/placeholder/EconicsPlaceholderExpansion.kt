@@ -56,12 +56,18 @@ object EconicsPlaceholderExpansion : PlaceholderExpansion() {
     private fun getBalance(uuid: UUID, currencyId: String, useFormat: Boolean): String? {
         val key = uuid to currencyId
 
+        if (!EconicsAPI.getAPI<CurrencyFileAPI>().hasCurrency(currencyId)) {
+            return null
+        }
+
         if (!cache.containsKey(key)) {
-            EconicsAPI.getAPI<PlayerCurrencyAPI>().getPlayerCurrency(uuid, currencyId).thenAccept { result ->
-                if (result is EconicsResult.GetSuccess) {
-                    cache[key] = result.data
+            EconicsAPI.getAPI<PlayerCurrencyAPI>()
+                .getPlayerCurrency(uuid, currencyId)
+                .thenAccept { result ->
+                    if (result is EconicsResult.GetSuccess) {
+                        cache[key] = result.data
+                    }
                 }
-            }
             return BigDecimal.ZERO.toPlainString()
         }
 
@@ -75,15 +81,11 @@ object EconicsPlaceholderExpansion : PlaceholderExpansion() {
         }
     }
 
-    fun load() {
-        register()
-    }
-
     fun reload() {
         if (isRegistered) {
             unregister()
         }
-        load()
+        register()
     }
 
     fun updateCache(uuid: UUID, currencyId: String, newAmount: BigDecimal)
