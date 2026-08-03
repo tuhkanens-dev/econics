@@ -77,6 +77,8 @@ class CurrencyImpl : CurrencyAPI {
 
         val commandsNode = currencyNode.node("commands")
 
+        commandsNode.node("enabled").set(currencyData.commands.enabled)
+
         CurrencyCommands.entries.forEach { command ->
             val commandName = command.name.lowercase()
             val commandNode = commandsNode.node(commandName)

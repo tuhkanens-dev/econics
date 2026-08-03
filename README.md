@@ -37,7 +37,7 @@ repositories {
     maven { url = uri("https://jitpack.io") }
 }
 dependencis {
-    compileOnly("com.github.tuhkanens-dev:econics:2.2.0")
+    compileOnly("com.github.tuhkanens-dev:econics:2.2.1")
 }
 ```
 **Maven (Xml)**
@@ -53,7 +53,7 @@ dependencis {
     <dependency>
         <groupId>com.github.tuhkanens-dev</groupId>
         <artifactId>econics</artifactId>
-        <version>2.2.0</version>
+        <version>2.2.1</version>
         <scope>provided</scope>
     </dependency>
 </dependencies>

@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "dev.tuhkanens"
-version = "2.2.0"
+version = "2.2.1"
 
 repositories {
     mavenCentral()
@@ -26,21 +26,4 @@ tasks {
 val targetJavaVersion = 21
 kotlin {
     jvmToolchain(targetJavaVersion)
-}
-
-subprojects {
-    apply(plugin = "maven-publish")
-
-    publishing {
-        repositories {
-            maven {
-                name = "GitHubPackages"
-                url = uri("https://maven.pkg.github.com/tuhkanens-dev/econics")
-                credentials {
-                    username = System.getenv("GITHUB_ACTOR")
-                    password = System.getenv("GITHUB_TOKEN")
-                }
-            }
-        }
-    }
 }

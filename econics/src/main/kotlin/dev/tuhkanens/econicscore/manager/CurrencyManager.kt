@@ -137,12 +137,12 @@ object CurrencyManager {
             val key = command.name.lowercase()
             val commandNode = commandsNode.node("commands").node(key)
 
-            val enabled = commandNode.node("enabled").getBoolean(false)
+            val enabled = commandNode.node("enabled").getBoolean(true)
 
             val permissionNode = commandNode.node("permission")
 
             val value = permissionNode.node("value").string ?: ""
-            val required = permissionNode.node("required").getBoolean(false)
+            val required = permissionNode.node("required").getBoolean(true)
 
             val permission = CurrencyPermissionData(value, required)
 
