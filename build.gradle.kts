@@ -9,7 +9,7 @@ plugins {
 
 allprojects {
     group = "dev.tuhkanens.econics"
-    version = "2.2.3"
+    version = "2.2.4"
 
     repositories {
         mavenCentral()

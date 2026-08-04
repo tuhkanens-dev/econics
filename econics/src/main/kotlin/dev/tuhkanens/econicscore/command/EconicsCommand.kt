@@ -47,6 +47,7 @@ class EconicsCommand {
                     executes(CommandExecutor { sender, _ ->
                         sender.sendMessage(MessagesManager.getComponent("messages.commands.econics.reload.currencies"))
                         CurrencyManager.reload()
+                        EconicsPlaceholder.reload()
 
                         if (FoliaUtils.getLib().isFolia) {
                             plugin.logger.info(FoliaUtils.getUnsupportedCommandsMessage())

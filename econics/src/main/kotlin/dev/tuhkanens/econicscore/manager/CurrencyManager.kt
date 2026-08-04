@@ -66,7 +66,6 @@ object CurrencyManager {
         if (!FoliaUtils.getLib().isFolia) {
             CurrencyCommand.reload()
         }
-        EconicsPlaceholder.reload()
 
         Bukkit.getOnlinePlayers().forEach { onlinePlayer ->
             setPlayerDefaultCurrencies(onlinePlayer)
