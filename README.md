@@ -17,7 +17,8 @@ easily with a clean and efficient system.
 
 
 **Admin Commands**
-- econics reload (required permission: `econics.admin.reload`)
+- `/econics reload` (required permission: `econics.admin.reload`)
+- `/econics remove currency_id confirm` (required permission: `econics.admin.currency-remove`)
 
 **Soft Dependencies**
 - PlaceholderAPI
@@ -50,11 +51,11 @@ dependencis {
 </repositories>
 
 <dependencies>
-    <dependency>
-        <groupId>com.github.tuhkanens-dev</groupId>
-        <artifactId>econics</artifactId>
-        <version>ECONICS-VERSION</version>
-        <scope>provided</scope>
-    </dependency>
+<dependency>
+    <groupId>com.github.tuhkanens-dev</groupId>
+    <artifactId>econics</artifactId>
+    <version>ECONICS-VERSION</version>
+    <scope>provided</scope>
+</dependency>
 </dependencies>
 ```
