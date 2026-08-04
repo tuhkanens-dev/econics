@@ -31,29 +31,26 @@ class EconicsCommand {
 
                 literalArgument("config") {
                     executes(CommandExecutor { sender, _ ->
-                        ConfigManager.reload()
-
                         sender.sendMessage(MessagesManager.getComponent("messages.commands.econics.reload.config"))
+                        ConfigManager.reload()
                     })
                 }
 
                 literalArgument("messages") {
                     executes(CommandExecutor { sender, _ ->
                         MessagesManager.reload()
-
                         sender.sendMessage(MessagesManager.getComponent("messages.commands.econics.reload.messages"))
                     })
                 }
 
                 literalArgument("currencies") {
                     executes(CommandExecutor { sender, _ ->
+                        sender.sendMessage(MessagesManager.getComponent("messages.commands.econics.reload.currencies"))
                         CurrencyManager.reload()
 
                         if (FoliaUtils.getLib().isFolia) {
                             plugin.logger.info(FoliaUtils.getUnsupportedCommandsMessage())
                         }
-
-                        sender.sendMessage(MessagesManager.getComponent("messages.commands.econics.reload.currencies"))
                     })
                 }
 
@@ -86,14 +83,6 @@ class EconicsCommand {
                             val currency = CurrencyManager.getCurrencies()[currencyId]
                                 ?: throw CommandUtils.message("errors.commands.unknown-currency")
 
-                            EconicsAPI.getAPI<CurrencyAPI>().removeCurrency(currency.id)
-
-                            if (!FoliaUtils.getLib().isFolia) {
-                                CurrencyCommand.reload()
-                            }
-
-                            EconicsAPI.getAPI<CurrencyAPI>().updateCurrencies()
-
                             sender.sendMessage(
                                 MessagesManager.getComponent(
                                     "messages.commands.econics.remove",
@@ -101,6 +90,14 @@ class EconicsCommand {
                                     )
                                 )
                             )
+
+                            EconicsAPI.getAPI<CurrencyAPI>().removeCurrency(currency.id)
+
+                            if (!FoliaUtils.getLib().isFolia) {
+                                CurrencyCommand.reload()
+                            }
+
+                            EconicsAPI.getAPI<CurrencyAPI>().updateCurrencies()
                         })
                     }
                 }

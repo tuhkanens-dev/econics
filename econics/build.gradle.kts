@@ -1,6 +1,5 @@
 plugins {
     kotlin("jvm")
-    kotlin("plugin.serialization")
     id("com.gradleup.shadow")
 }
 
@@ -11,19 +10,16 @@ dependencies {
     implementation("net.flectone:libby-paper:2.0.0")
     implementation("net.flectone:libby-bukkit:2.0.0")
 
-    implementation("org.jetbrains.exposed:exposed-migration-jdbc:1.3.1")
-    implementation("org.jetbrains.exposed:exposed-core:1.3.1")
-    implementation("org.jetbrains.exposed:exposed-jdbc:1.3.1")
-
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
-    implementation("org.jetbrains.kotlin:kotlin-reflect:2.4.0")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0")
 
     implementation("com.tcoded:FoliaLib:0.5.1")
 
+    implementation("org.jetbrains.exposed:exposed-core:1.3.1")
+    implementation("org.jetbrains.exposed:exposed-jdbc:1.3.1")
+    implementation("org.jetbrains.exposed:exposed-migration-jdbc:1.3.1")
+
     compileOnly("org.xerial:sqlite-jdbc:3.49.0.0")
-    compileOnly("mysql:mysql-connector-java:8.0.33")
+    compileOnly("com.mysql:mysql-connector-j:9.7.0")
     compileOnly("com.zaxxer:HikariCP:7.1.0")
 
     compileOnly("org.spongepowered:configurate-yaml:4.2.0")
@@ -47,7 +43,8 @@ tasks {
         relocate("dev.jorel.commandapi", "dev.tuhkanens.econics.libs.commandapi")
         relocate("org.spongepowered.configurate", "dev.tuhkanens.econics.libs.configurate")
         relocate("com.zaxxer.hikari", "dev.tuhkanens.econics.libs.hikari")
-        relocate("com.tcoded.folialib", "dev.tuhkanens.econics.folialib")
+        relocate("com.tcoded.folialib", "dev.tuhkanens.econics.libs.folialib")
+        relocate("com.mysql.jdbc", "dev.tuhkanens.econics.libs.mysql")
     }
     build {
         dependsOn("shadowJar")

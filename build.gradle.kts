@@ -2,15 +2,14 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
 
 plugins {
     base
-    kotlin("jvm") version "2.4.0" apply false
-    kotlin("plugin.serialization") version "2.4.0" apply false
+    kotlin("jvm") version "2.3.20" apply false
     id("com.gradleup.shadow") version "9.3.0" apply false
     `maven-publish`
 }
 
 allprojects {
     group = "dev.tuhkanens.econics"
-    version = "2.2.2"
+    version = "2.2.3"
 
     repositories {
         mavenCentral()

@@ -3,6 +3,7 @@ package dev.tuhkanens.econicscore.lib
 import com.alessiodp.libby.Library
 import com.alessiodp.libby.LibraryManager
 import com.alessiodp.libby.PaperLibraryManager
+import com.alessiodp.libby.relocation.Relocation
 import dev.tuhkanens.econicscore.Main
 
 class LibraryLoader {
@@ -15,60 +16,78 @@ class LibraryLoader {
         libraryManager.addMavenCentral()
 
         libraryManager.loadLibraries(
-            Library.builder()
-                .groupId("org{}jetbrains{}kotlin")
-                .artifactId("kotlin-stdlib")
-                .version("2.4.0")
-                .build(),
-            Library.builder()
-                .groupId("org{}jetbrains{}kotlin")
-                .artifactId("kotlin-reflect")
-                .version("2.4.0")
-                .build(),
-            Library.builder()
-                .groupId("org{}jetbrains{}kotlinx")
-                .artifactId("kotlinx-coroutines-core")
-                .version("1.11.0")
-                .build(),
+            // sqlite
             Library.builder()
                 .groupId("org{}xerial")
                 .artifactId("sqlite-jdbc")
                 .version("3.49.0.0")
                 .build(),
+
+            // mysql
             Library.builder()
-                .groupId("mysql")
-                .artifactId("mysql-connector-java")
-                .version("5.1.6")
-                .relocate("com{}mysql{}jdbc", "dev{}tuhkanens{}econics{}libs{}mysql")
+                .groupId("com.mysql")
+                .artifactId("mysql-connector-j")
+                .version("9.7.0")
+                .relocate(
+                    Relocation.builder()
+                        .pattern("com{}mysql{}jdbc")
+                        .relocatedPattern("dev{}tuhkanens{}econics{}libs{}mysql")
+                        .build()
+                )
                 .build(),
+
+            // hikari
             Library.builder()
                 .groupId("com{}zaxxer")
                 .artifactId("HikariCP")
                 .version("7.1.0")
-                .relocate("com{}zaxxer{}hikari", "dev{}tuhkanens{}econics{}libs{}hikari")
+                .relocate(
+                    Relocation.builder()
+                        .pattern("com{}zaxxer{}hikari")
+                        .relocatedPattern("dev{}tuhkanens{}econics{}libs{}hikari")
+                        .build()
+                )
                 .build(),
+
+            // configurate-yaml
             Library.builder()
                 .groupId("org{}spongepowered")
                 .artifactId("configurate-yaml")
                 .version("4.2.0")
-                .relocate("org{}spongepowered{}configurate", "dev{}tuhkanens{}econics{}libs{}configurate")
+                .relocate(
+                    Relocation.builder()
+                        .pattern("org{}spongepowered{}configurate")
+                        .relocatedPattern("dev{}tuhkanens{}econics{}libs{}configurate")
+                        .build()
+                )
                 .resolveTransitiveDependencies(true)
                 .build(),
+
+            // commandapi paper shade
             Library.builder()
                 .groupId("dev{}jorel")
                 .artifactId("commandapi-paper-shade")
                 .version("11.2.0")
-                .relocate("dev{}jorel{}commandapi", "dev{}tuhkanens{}econics{}libs{}commandapi")
-                .resolveTransitiveDependencies(true)
+                .relocate(
+                    Relocation.builder()
+                        .pattern("dev{}jorel{}commandapi")
+                        .relocatedPattern("dev{}tuhkanens{}econics{}libs{}commandapi")
+                        .build()
+                )
                 .build(),
+
+            // commandapi kotlin paper
             Library.builder()
                 .groupId("dev{}jorel")
                 .artifactId("commandapi-kotlin-paper")
                 .version("11.2.0")
-                .relocate("dev{}jorel{}commandapi", "dev{}tuhkanens{}econics{}libs{}commandapi")
-                .resolveTransitiveDependencies(true)
+                .relocate(
+                    Relocation.builder()
+                        .pattern("dev{}jorel{}commandapi")
+                        .relocatedPattern("dev{}tuhkanens{}econics{}libs{}commandapi")
+                        .build()
+                )
                 .build(),
         )
     }
-
 }
